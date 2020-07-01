@@ -1,4 +1,4 @@
-from figgie import Player, Suit
+from games.figgie import Player, Suit
 
 
 class OneSuitPlayer(Player):

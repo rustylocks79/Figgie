@@ -4,6 +4,7 @@ player2 = SimplePlayer('player 2', fig, buy_tolerance=1, sell_tolerance=1)
 player3 = SimplePlayer('player 3', fig, buy_tolerance=1, sell_tolerance=1)
 player4 = SimplePlayer('player 4', fig, buy_tolerance=1, sell_tolerance=1)
 
+After 1,000,000 games with 5 rounds per game:
 player 1 won 290318 games.
 player 2 won 290176 games.
 player 3 won 290570 games.

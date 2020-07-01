@@ -1,5 +1,5 @@
 import unittest
-from figgie import *
+from games.figgie import *
 
 
 class Testing(unittest.TestCase):

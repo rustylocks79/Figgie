@@ -1,6 +1,6 @@
 from math import floor
 
-from figgie import *
+from games.figgie import *
 from random import *
 
 

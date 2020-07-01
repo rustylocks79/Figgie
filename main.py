@@ -1,6 +1,4 @@
-from figgie import *
-from bot.one_suit_player import *
-from bot.simple_player import *
+from agents.simple_player import *
 
 if __name__ == '__main__':
     fig = Figgie()
