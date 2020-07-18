@@ -38,28 +38,33 @@ class GameNode:
         self.sum_strategy = np.zeros(len(actions), dtype=float)
 
     def get_strategy(self) -> np.ndarray:
-        strategy = np.zeros(self.num_actions, dtype=float)
         total = 0
         for regret in self.sum_regret:
             if regret > 0:
                 total += regret
 
-        for i in range(self.num_actions):
-            if total > 0.0:
+        if total > 0.0:
+            strategy = np.zeros(self.num_actions, dtype=float)
+            for i in range(self.num_actions):
                 strategy[i] = max(0.0, self.sum_regret[i] / total)
-            else:
-                strategy[i] = 1.0 / self.num_actions
+        else:
+            return np.full(self.num_actions, 1.0 / self.num_actions, dtype=float)
 
         return strategy
 
     def get_trained_strategy(self) -> np.ndarray:
-        total = sum(self.sum_strategy)
-        strategy = np.zeros(self.num_actions, dtype=float)
-        for i in range(self.num_actions):
-            if total == 0:
-                strategy[i] = 1.0 / self.num_actions
-            else:
-                strategy[i] += self.sum_strategy[i] / total
+        total = 0
+        for regret in self.sum_strategy:
+            if regret > 0:
+                total += regret
+
+        if total > 0.0:
+            strategy = np.zeros(self.num_actions, dtype=float)
+            for i in range(self.num_actions):
+                strategy[i] = max(0.0, self.sum_strategy[i] / total)
+        else:
+            return np.full(self.num_actions, 1.0 / self.num_actions, dtype=float)
+
         return strategy
 
     def __str__(self):

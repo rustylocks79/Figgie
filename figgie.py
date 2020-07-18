@@ -103,30 +103,31 @@ class Figgie(Game):
         result = []
         for suit in SUITS:
             market = self.markets[suit.value]
+            abbr = suit.to_abbr()
             # asking
             if hand[suit.value] >= 1:
                 if market.selling_price is not None:
                     for i in range(1, market.selling_price):
-                        result.append('ask ' + suit.to_abbr() + ' ' + str(i))
+                        result.append('ask ' + abbr + ' ' + str(i))
                 else:
                     for i in range(1, 10):
-                        result.append('ask ' + suit.to_abbr() + ' ' + str(i))
+                        result.append('ask ' + abbr + ' ' + str(i))
 
             # bidding
             if market.buying_price is not None:
                 for i in range(market.buying_price + 1, 10):
-                    result.append('bid ' + suit.to_abbr() + ' ' + str(i))
+                    result.append('bid ' + abbr + ' ' + str(i))
             else:
                 for i in range(1, 10):
-                    result.append('bid ' + suit.to_abbr() + ' ' + str(i))
+                    result.append('bid ' + abbr + ' ' + str(i))
 
             # buying
             if market.selling_price is not None and market.selling_player != self.active_player:
-                result.append('buy ' + suit.to_abbr())
+                result.append('buy ' + abbr)
 
             # selling
             if (market.buying_price is not None and market.buying_player != self.active_player) and hand[suit.value] >= 1:
-                result.append('sell ' + suit.to_abbr())
+                result.append('sell ' + abbr)
         return result
 
     def normalize_index(self, index) -> int:
