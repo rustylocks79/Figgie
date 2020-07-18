@@ -1,8 +1,7 @@
 from math import sqrt
-from random import *
 
-from games import cfr
-from games.game import *
+import cfr
+from game import *
 
 
 

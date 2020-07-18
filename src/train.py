@@ -3,8 +3,9 @@ import sys
 import time
 import argparse
 
-from figgie import Figgie, SUITS
-from games import cfr
+from figgie import Figgie
+import cfr
+from isg import generate_info_set_basic
 
 
 def save(strategy: dict, trials: int, info_set_method: str):
@@ -15,25 +16,6 @@ def save(strategy: dict, trials: int, info_set_method: str):
         pickle.dump(strategy, file)
     total_time = time.process_time() - start_time
     print('Saving to file took {} \n'.format(total_time))
-
-
-def generate_info_set_basic(figgie):
-    result = ''
-    hand = game.cards[figgie.get_active_player()]
-    for suit in SUITS:
-        result += suit.to_abbr() + str(hand[suit.value])
-    result += ':'
-    for market in figgie.markets:
-        result += market.suit.to_abbr()
-        result += str(figgie.normalize_index(market.buying_player)) + str(
-            market.buying_price) if market.buying_price is not None else 'NN'
-        result += str(figgie.normalize_index(market.selling_player)) + str(
-            market.selling_price) if market.selling_price is not None else 'NN'
-    return result
-
-
-def generate_info_set_advanced(figgie):
-    pass
 
 
 if __name__ == '__main__':

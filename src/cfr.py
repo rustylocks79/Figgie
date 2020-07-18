@@ -2,8 +2,8 @@ import time
 
 import numpy as np
 
-from games.game import Game
-from games.my_math import choice_weighted
+from game import Game
+from my_math import choice_weighted
 
 
 class GameNode:
@@ -49,12 +49,12 @@ class GameNode:
         return result
 
 
-def train(game: Game, generate_info_set, trials: int) -> dict:
+def train(game: Game, info_set_generator, trials: int) -> dict:
     print('Creating Game Tree: ')
     start_time = time.process_time()
     game_tree = {}
     for i in range(trials):
-        __train(game, generate_info_set, game_tree, 1.0, 1.0, i % 2)
+        __train(game, info_set_generator, game_tree, 1.0, 1.0, i % 2)
         game.reset()
     total_time = time.process_time() - start_time
     print('Created Game Tree in {} \n'.format(total_time))
@@ -69,14 +69,14 @@ def train(game: Game, generate_info_set, trials: int) -> dict:
     return strategy, game_tree
 
 
-def __train(game: Game, generate_info_set, game_tree: map, pi: float, pi_prime: float, training_player: int) -> tuple:
+def __train(game: Game, info_set_generator, game_tree: map, pi: float, pi_prime: float, training_player: int) -> tuple:
     player = game.get_active_player()
     actions = game.get_actions()
 
     if game.is_finished():
         return game.get_utility(player) / pi_prime, 1.0
 
-    info_set = generate_info_set(game)
+    info_set = info_set_generator(game)
     if info_set in game_tree:
         node = game_tree[info_set]
     else:
@@ -95,8 +95,8 @@ def __train(game: Game, generate_info_set, game_tree: map, pi: float, pi_prime: 
 
     choice = choice_weighted(probability)
     game.preform(actions[choice])
-    result = __train(game, generate_info_set, game_tree, pi * strategy[choice], pi_prime * probability[choice],
-                     training_player) if player == training_player else __train(game, generate_info_set, game_tree, pi,
+    result = __train(game, info_set_generator, game_tree, pi * strategy[choice], pi_prime * probability[choice],
+                     training_player) if player == training_player else __train(game, info_set_generator, game_tree, pi,
                                                                                 pi_prime, training_player)
 
     util = -result[0]

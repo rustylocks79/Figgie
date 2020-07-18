@@ -1,5 +1,5 @@
 from random import randint
-from games.my_math import choice_weighted
+from my_math import choice_weighted
 
 
 class Agent:
@@ -17,13 +17,14 @@ class ControllerAgent(Agent):
 
 
 class StrategyAgent(Agent):
-    def __init__(self, strategy):
+    def __init__(self, strategy, info_set_generator):
         super().__init__()
         self.strategy = strategy
+        self.info_set_generator = info_set_generator
         self.unknown_states = 0
 
     def get_action(self, game) -> str:
-        info_set = game.get_info_set()
+        info_set = self.info_set_generator(game)
         actions = game.get_actions()
         if info_set in self.strategy:
             return actions[choice_weighted(self.strategy[info_set])]
@@ -48,12 +49,6 @@ class Game:
     def get_actions(self) -> list:
         """
         :return: a list of string actions that can be preformed in the games current state.
-        """
-        pass
-
-    def get_info_set(self) -> str:
-        """
-        :return: A string representation of the current state of the game.
         """
         pass
 
