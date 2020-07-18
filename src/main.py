@@ -82,7 +82,8 @@ if __name__ == '__main__':
 
     save(strategy, args.trials, 'basic')
 
-    print('Playing {} games'.format(args.trials))
+    print('Testing Figgie')
+    print('\tgames: {}'.format(args.games))
     start_time = time.process_time()
     agents = [RandomAgent(),
               RandomAgent(),
