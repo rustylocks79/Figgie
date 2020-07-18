@@ -29,16 +29,15 @@ class Suit(Enum):
         elif self.value == Suit.SPADES.value:
             return Suit.CLUBS
 
-
-def to_abbr(suit: Suit) -> str:
-    if suit == Suit.CLUBS:
-        return 'C'
-    elif suit == Suit.DIAMONDS:
-        return 'D'
-    elif suit == Suit.HEARTS:
-        return 'H'
-    elif suit == Suit.SPADES:
-        return 'S'
+    def to_abbr(self) -> str:
+        if self == Suit.CLUBS:
+            return 'C'
+        elif self == Suit.DIAMONDS:
+            return 'D'
+        elif self == Suit.HEARTS:
+            return 'H'
+        elif self == Suit.SPADES:
+            return 'S'
 
 
 def from_abbr(name: str) -> Suit:
@@ -111,26 +110,26 @@ class Figgie(Game):
             if hand[suit.value] >= 1:
                 if market.selling_price is not None:
                     for i in range(1, market.selling_price):
-                        result.append('ask ' + to_abbr(suit) + ' ' + str(i))
+                        result.append('ask ' + suit.to_abbr() + ' ' + str(i))
                 else:
                     for i in range(1, 10):
-                        result.append('ask ' + to_abbr(suit) + ' ' + str(i))
+                        result.append('ask ' + suit.to_abbr() + ' ' + str(i))
 
             # bidding
             if market.buying_price is not None:
                 for i in range(market.buying_price + 1, 10):
-                    result.append('bid ' + to_abbr(suit) + ' ' + str(i))
+                    result.append('bid ' + suit.to_abbr() + ' ' + str(i))
             else:
                 for i in range(1, 10):
-                    result.append('bid ' + to_abbr(suit) + ' ' + str(i))
+                    result.append('bid ' + suit.to_abbr() + ' ' + str(i))
 
             # buying
             if market.selling_price is not None and market.selling_player != self.active_player:
-                result.append('buy ' + to_abbr(suit))
+                result.append('buy ' + suit.to_abbr())
 
             # selling
             if (market.buying_price is not None and market.buying_player != self.active_player) and hand[suit.value] >= 1:
-                result.append('sell ' + to_abbr(suit))
+                result.append('sell ' + suit.to_abbr())
         return result
 
     def normalize_index(self, index) -> int:
@@ -149,18 +148,6 @@ class Figgie(Game):
         :return: the denormalized index
         """
         return (index + self.active_player) % 4
-
-    def get_info_set(self) -> str:
-        result = ''
-        hand = self.cards[self.active_player]
-        for suit in SUITS:
-            result += to_abbr(suit) + str(hand[suit.value])
-        result += ':'
-        for market in self.markets:
-            result += to_abbr(market.suit)
-            result += str(self.normalize_index(market.buying_player)) + str(market.buying_price) if market.buying_price is not None else 'NN'
-            result += str(self.normalize_index(market.selling_player)) + str(market.selling_price) if market.selling_price is not None else 'NN'
-        return result
 
     def preform(self, action: str):
         arr = action.split(' ')
