@@ -39,7 +39,7 @@ class ISGAdvanced(InfoSetGenerator):
 
 
 def save(strategy: dict, trials: int, info_set_method: str):
-    file_name = '../strategies/strategy_{}_{}.pickle'.format(trials, info_set_method)
+    file_name = 'strategies/strategy_{}_{}.pickle'.format(trials, info_set_method)
     print('Saving to {}: '.format(file_name))
     start_time = time.process_time()
     with open(file_name, 'wb') as file:

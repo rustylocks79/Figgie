@@ -1,3 +1,5 @@
+# cython: profile=True
+
 from random import uniform
 
 import numpy as np

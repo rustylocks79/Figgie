@@ -1,3 +1,5 @@
+# cython: profile=True
+
 from enum import Enum
 from random import choice, randint, shuffle
 

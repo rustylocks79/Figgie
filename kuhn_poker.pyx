@@ -1,3 +1,5 @@
+# cython: profile=True
+
 from math import sqrt
 from random import randint
 

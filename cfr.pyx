@@ -1,3 +1,5 @@
+# cython: profile=True
+
 from random import choice
 
 import numpy as np
@@ -120,7 +122,6 @@ def __train(game: Game, info_set_generator: InfoSetGenerator, game_tree: map, pi
     result = __train(game, info_set_generator, game_tree, pi * strategy[chosen_action], pi_prime * probability[chosen_action],
                      training_player) if player == training_player else __train(game, info_set_generator, game_tree, pi,
                                                                                 pi_prime, training_player)
-
     util = -result[0]
     p_tail = result[1]
 
