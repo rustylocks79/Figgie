@@ -7,7 +7,7 @@ from figgie import Figgie, SUITS
 from games import cfr
 
 
-def save(strategy: map, trials: int, info_set_method: str):
+def save(strategy: dict, trials: int, info_set_method: str):
     file_name = 'strategies/strategy_{}_{}.pickle'.format(trials, info_set_method)
     print('Saving to {}: '.format(file_name))
     start_time = time.process_time()
