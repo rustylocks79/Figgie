@@ -1,7 +1,9 @@
 from random import uniform
 
+import numpy as np
 
-def choice_weighted(weights: list) -> int:
+
+def choice_weighted(weights: np.ndarray) -> int:
     """
     Precondition: the sum of all the weights should add up to 1.0
     :param weights: a list of floating point representing the probability of selecting each index.
