@@ -11,6 +11,11 @@ NUM_PLAYERS = 4
 NUM_ROUNDS = 4
 STARTING_CHIPS = 250
 
+ASK = 0
+BID = 1
+BUY = 2
+SELL = 3
+
 
 class Suit(Enum):
     CLUBS = 0
@@ -39,17 +44,17 @@ class Suit(Enum):
             return 'S'
 
 
-def from_abbr(name: str) -> Suit:
-    if name == 'C':
+def from_value(value: int) -> Suit:
+    if value == Suit.CLUBS.value:
         return Suit.CLUBS
-    elif name == 'D':
+    elif value == Suit.DIAMONDS.value:
         return Suit.DIAMONDS
-    elif name == 'H':
+    elif value == Suit.HEARTS.value:
         return Suit.HEARTS
-    elif name == 'S':
+    elif value == Suit.SPADES.value:
         return Suit.SPADES
     else:
-        raise ValueError('Invalid suit name {}'.format(name))
+        raise ValueError('Invalid suit value {}'.format(value))
 
 
 SUITS = [Suit.CLUBS, Suit.DIAMONDS, Suit.HEARTS, Suit.SPADES]
@@ -100,37 +105,44 @@ class Figgie(Game):
                 suit = deck.pop()
                 self.cards[i][suit.value] += 1
 
-    def get_actions(self) -> list:
+    def get_actions(self) -> np.ndarray:
+        """
+        :return: all possible opcodes for this game state
+        """
         hand = self.cards[self.active_player]
         result = []
         for suit in SUITS:
             market = self.markets[suit.value]
-            abbr = suit.to_abbr()
+            suit_code = suit.value * 10
             # asking
             if hand[suit.value] >= 1:
+                ask_code = ASK * 100
                 if market.selling_price is not None:
                     for i in range(1, market.selling_price):
-                        result.append('ask ' + abbr + ' ' + str(i))
+                        result.append(ask_code + suit_code + i)
                 else:
                     for i in range(1, 10):
-                        result.append('ask ' + abbr + ' ' + str(i))
+                        result.append(ask_code + suit_code + i)
 
             # bidding
+            bid_code = BID * 100
             if market.buying_price is not None:
                 for i in range(market.buying_price + 1, 10):
-                    result.append('bid ' + abbr + ' ' + str(i))
+                    result.append(bid_code + suit_code + i)
             else:
                 for i in range(1, 10):
-                    result.append('bid ' + abbr + ' ' + str(i))
+                    result.append(bid_code + suit_code + i)
 
             # buying
+            buy_code = BUY * 100
             if market.selling_price is not None and market.selling_player != self.active_player:
-                result.append('buy ' + abbr)
+                result.append(buy_code + suit_code)
 
             # selling
+            sell_code = SELL * 100
             if (market.buying_price is not None and market.buying_player != self.active_player) and hand[suit.value] >= 1:
-                result.append('sell ' + abbr)
-        return result
+                result.append(sell_code + suit_code)
+        return np.array(result, dtype=int)
 
     def normalize_index(self, index) -> int:
         """
@@ -149,19 +161,20 @@ class Figgie(Game):
         """
         return (index + self.active_player) % 4
 
-    def preform(self, action: str):
-        arr = action.split(' ')
-        suit = from_abbr(arr[1])
-        if arr[0] == 'buy':
+    def preform(self, action: int) -> None:
+        op = action // 100
+        action %= 100
+        suit = from_value(action // 10)
+        if op == ASK:
+            self.markets[suit.value].ask(self.active_player, action % 10)
+        elif op == BID:
+            self.markets[suit.value].bid(self.active_player, action % 10)
+        elif op == BUY:
             self.markets[suit.value].buy(self.active_player)
             self.clear_markets()
-        elif arr[0] == 'sell':
+        elif op == SELL:
             self.markets[suit.value].sell(self.active_player)
             self.clear_markets()
-        elif arr[0] == 'ask':
-            self.markets[suit.value].ask(self.active_player, int(arr[2]))
-        elif arr[0] == 'bid':
-            self.markets[suit.value].bid(self.active_player, int(arr[2]))
 
         self.active_player += 1
         if self.active_player == 4:
@@ -171,23 +184,22 @@ class Figgie(Game):
     def is_finished(self) -> bool:
         return self.round == NUM_ROUNDS
 
-    def get_utility(self, player: int) -> int:
-        awarded = 0
+    def get_utility(self) -> np.ndarray:
+        utility = np.zeros(4)
         total_awarded = 0
         for i in range(NUM_PLAYERS):
             award = self.cards[i][self.goal_suit.value] * 10
+            utility[i] = self.chips[i] + award
             total_awarded += award
-            if i == player:
-                awarded += award
 
         max_goal_cards = max(self.cards[i][self.goal_suit.value] for i in range(NUM_PLAYERS))
         winners = [j for j in range(NUM_PLAYERS) if self.cards[j][self.goal_suit.value] == max_goal_cards]
 
-        if player in winners:
-            remaining_winnings = 200 - awarded
-            awarded += remaining_winnings // len(winners)
+        prize = (200 - total_awarded) // len(winners)
+        for winner in winners:
+            utility[winner] += prize
 
-        return self.chips[player] + awarded
+        return utility
 
     def get_active_player(self) -> int:
         return self.active_player

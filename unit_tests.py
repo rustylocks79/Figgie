@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from figgie import Figgie, Suit, STARTING_CHIPS, SUITS
+from figgie import Figgie, Suit, STARTING_CHIPS, SUITS, ASK, BID, BUY, SELL
 
 
 class Testing(unittest.TestCase):
@@ -22,7 +22,7 @@ class Testing(unittest.TestCase):
             can, _ = self.game.markets[suit.value].can_ask(0, 7)
             self.assertTrue(can)
 
-            self.game.preform('ask {} 7'.format(suit.to_abbr()))
+            self.game.preform((ASK * 100) + (suit.value * 10) + 7)
             self.assertEqual(self.game.markets[suit.value].selling_price, 7, 'Selling price not set properly with ask operation')
 
         for suit in SUITS:
@@ -35,7 +35,7 @@ class Testing(unittest.TestCase):
             can, _ = self.game.markets[suit.value].can_bid(0, 7)
             self.assertTrue(can)
 
-            self.game.preform('bid {} 7'.format(suit.to_abbr()))
+            self.game.preform((BID * 100) + (suit.value * 10) + 7)
             self.assertEqual(self.game.markets[suit.value].buying_price, 7,
                              'Buying price not set properly with ask operation')
 
@@ -48,11 +48,11 @@ class Testing(unittest.TestCase):
         def check(suit: Suit):
             can, _ = self.game.markets[suit.value].can_ask(0, 7)
             self.assertTrue(can)
-            self.game.preform('ask {} 7'.format(suit.to_abbr()))
+            self.game.preform((ASK * 100) + (suit.value * 10) + 7)
             self.assertEqual(self.game.markets[suit.value].selling_price, 7,
                              'Selling price not set properly with ask operation')
 
-            self.game.preform('buy {}'.format(suit.to_abbr()))
+            self.game.preform((BUY * 100) + (suit.value * 10))
             for s in SUITS:
                 self.assertEqual(self.game.markets[s.value].buying_price, None,
                                  'Market not reset after buy')
@@ -73,10 +73,10 @@ class Testing(unittest.TestCase):
             can, _ = self.game.markets[suit.value].can_bid(0, 7)
             self.assertTrue(can)
 
-            self.game.preform('bid {} 7'.format(suit.to_abbr()))
+            self.game.preform((BID * 100) + (suit.value * 10) + 7)
             self.assertEqual(self.game.markets[suit.value].buying_price, 7,
                              'Buying price not set properly with ask operation')
-            self.game.preform('sell {}'.format(suit.to_abbr()))
+            self.game.preform((SELL * 100) + (suit.value * 10))
             for s in SUITS:
                 self.assertEqual(self.game.markets[s.value].buying_price, None,
                                  'Market not reset after buy')

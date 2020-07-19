@@ -2,33 +2,35 @@
 
 from random import choice
 
+import numpy as np
+
 
 class Agent:
     def __init__(self):
         self.wins = 0
         self.total_utility = 0
 
-    def get_action(self, game) -> str:
+    def get_action(self, game) -> int:
         pass
 
 
 class ControllerAgent(Agent):
-    def get_action(self, game) -> str:
+    def get_action(self, game) -> int:
         return input('Action: ')
 
 
 class RandomAgent(Agent):
-    def get_action(self, game) -> str:
+    def get_action(self, game) -> int:
         actions = game.get_actions()
         return choice(actions)
 
 
 class OneActionAgent(Agent):
-    def __init__(self, action):
+    def __init__(self, action: int):
         super().__init__()
         self.action = action
 
-    def get_action(self, game) -> str:
+    def get_action(self, game) -> int:
         return self.action
 
 
@@ -45,13 +47,13 @@ class Game:
         """
         pass
 
-    def get_actions(self) -> list:
+    def get_actions(self) -> np.ndarray:
         """
         :return: a list of string actions that can be preformed in the games current state.
         """
         pass
 
-    def preform(self, action: str) -> None:
+    def preform(self, action: int) -> None:
         """
         :param action: the string action to be preformed
         :return: change the state of the game by preforming the provided action.
@@ -64,11 +66,10 @@ class Game:
         """
         pass
 
-    def get_utility(self, player: int) -> int:
+    def get_utility(self) -> list:
         """
         Precondition: the game must be in a terminal state.
-        Returns the utility achieved by player with the index 'player_index'.
-        :param player: the index of a player
+        Returns the utility achieved by all players.
         """
         pass
 
@@ -77,14 +78,11 @@ class Game:
             while not self.is_finished():
                 player = self.get_active_player()
                 self.preform(agents[player].get_action(self))
-            max_index = 0
-            max_utility = self.get_utility(0)
-            agents[0].total_utility += max_utility
-            for j in range(1, len(agents)):
-                utility = self.get_utility(j)
-                agents[j].total_utility += utility
-                if utility > max_utility:
-                    max_index = j
-                    max_utility = utility
-            agents[max_index].wins += 1
+            utility = self.get_utility()
+            for i in range(len(agents)):
+                agents[i].total_utility += utility[i]
+            max_utility = max(utility)
+            winners = [j for j in range(len(utility)) if utility[j] == max_utility]
+            for winner in winners:
+                agents[winner].wins += 1
             self.reset()

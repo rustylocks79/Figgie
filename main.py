@@ -90,7 +90,7 @@ if __name__ == '__main__':
               RandomAgent(),
               StrategyAgent(strategy, isgb)]
     game.reset()
-    game.play(agents, args.trials)
+    game.play(agents, args.games)
     total_time = time.process_time() - start_time
     print('\ttime: {} seconds'.format(total_time))
 
@@ -98,7 +98,7 @@ if __name__ == '__main__':
         print('agent {}'.format(i))
         print('\twins: {}'.format(agents[i].wins))
         print('\ttotal utility: {}'.format(agents[i].total_utility))
-        print('\tavg. utility: {}'.format(agents[i].total_utility / args.trials))
+        print('\tavg. utility: {}'.format(agents[i].total_utility / args.games))
         if isinstance(agents[i], StrategyAgent):
             print('\tunknown states: {}'.format(agents[i].unknown_states))
-            print('\tavg unknown states: {}'.format(agents[i].unknown_states / args.trials))
+            print('\tavg unknown states: {}'.format(agents[i].unknown_states / args.games))

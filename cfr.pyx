@@ -17,13 +17,13 @@ class InfoSetGenerator:
 
 
 class StrategyAgent(Agent):
-    def __init__(self, strategy, info_set_generator: InfoSetGenerator):
+    def __init__(self, strategy: dict, info_set_generator: InfoSetGenerator):
         super().__init__()
         self.strategy = strategy
         self.info_set_generator = info_set_generator
         self.unknown_states = 0
 
-    def get_action(self, game) -> str:
+    def get_action(self, game) -> int:
         info_set = self.info_set_generator.generate(game)
         actions = game.get_actions()
         if info_set in self.strategy:
@@ -34,7 +34,7 @@ class StrategyAgent(Agent):
 
 
 class GameNode:
-    def __init__(self, actions: list):
+    def __init__(self, actions: np.ndarray):
         self.num_actions = len(actions)
         self.sum_regret = np.zeros(len(actions), dtype=float)
         self.sum_strategy = np.zeros(len(actions), dtype=float)
@@ -98,7 +98,8 @@ def __train(game: Game, info_set_generator: InfoSetGenerator, game_tree: map, pi
     actions = game.get_actions()
 
     if game.is_finished():
-        return game.get_utility(player) / pi_prime, 1.0
+        utility = game.get_utility()
+        return utility[player] / pi_prime, 1.0
 
     info_set = info_set_generator.generate(game)
     if info_set in game_tree:
@@ -109,13 +110,13 @@ def __train(game: Game, info_set_generator: InfoSetGenerator, game_tree: map, pi
 
     strategy = node.get_strategy()
 
-    probability = np.zeros(len(actions), dtype=float)
     epsilon = 0.6
-    for action in range(len(actions)):
-        if player == training_player:
+    if player == training_player:
+        probability = np.zeros(len(actions), dtype=float)
+        for action in range(len(actions)):
             probability[action] = epsilon / len(actions) + (1.0 - epsilon) * strategy[action]
-        else:
-            probability[action] = strategy[action]
+    else:
+        probability = np.copy(strategy)
 
     chosen_action = choice_weighted(probability)
     game.preform(actions[chosen_action])

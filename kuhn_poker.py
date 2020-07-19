@@ -1,5 +1,6 @@
 # cython: profile=True
 
+import numpy as np
 from math import sqrt
 from random import randint
 
@@ -37,11 +38,11 @@ class KuhnPoker(Game):
     def get_active_player(self) -> int:
         return self.active_player
 
-    def get_actions(self) -> list:
-        return ['p', 'b']
+    def get_actions(self) -> np.ndarray:
+        return np.array([0, 1], dtype=int)
 
-    def preform(self, action: str) -> None:
-        self.history += action
+    def preform(self, action: int) -> None:
+        self.history += 'p' if action == 0 else 'b'
         self.active_player += 1
         self.active_player %= 2
 
@@ -53,20 +54,19 @@ class KuhnPoker(Game):
             return terminal_pass or double_bet
         return False
 
-    def get_utility(self, player: int) -> int:
+    def get_utility(self) -> list:
         plays = len(self.history)
-        opponent = 1 - player
         terminal_pass = self.history[plays - 1] == 'p'
         double_bet = self.history[plays - 2:plays] == 'bb'
-        is_player_card_higher = self.cards[player] > self.cards[opponent]
+        is_player_card_higher = self.cards[0] > self.cards[1]
         if terminal_pass:
             if self.history == 'pp':
-                utility = 1 if is_player_card_higher else -1
+                utility = [1, -1] if is_player_card_higher else [-1, 1]
             else:
-                utility = 1
+                utility = [1, -1]
             return utility
         elif double_bet:
-            return 2 if is_player_card_higher else -2
+            return [2, -2] if is_player_card_higher else [-2, 2]
         else:
             raise ValueError("game is not in terminal state. ")
 
