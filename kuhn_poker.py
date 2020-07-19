@@ -1,21 +1,16 @@
-# cython: profile=True
-
-import numpy as np
 from math import sqrt
 from random import randint
 
-import cfr
-from cfr import StrategyAgent, InfoSetGenerator
+from agents import StrategyAgent, OneActionAgent
+from cfr import CFRMinimizer
 from game import *
 
 
-class ISB(InfoSetGenerator):
-    def __init__(self):
-        super().__init__('basic')
+def isg_basic(kuhn) -> str:
+    return str(kuhn.cards[kuhn.get_active_player()]) + kuhn.history
 
-    def generate(self, game) -> str:
-        return str(game.cards[game.get_active_player()]) + game.history
-
+def ag_basic(kuhn) -> np.ndarray:
+    return np.array([0, 1], dtype=int)
 
 class KuhnPoker(Game):
     def __init__(self):
@@ -37,9 +32,6 @@ class KuhnPoker(Game):
 
     def get_active_player(self) -> int:
         return self.active_player
-
-    def get_actions(self) -> np.ndarray:
-        return np.array([0, 1], dtype=int)
 
     def preform(self, action: int) -> None:
         self.history += 'p' if action == 0 else 'b'
@@ -74,22 +66,23 @@ class KuhnPoker(Game):
 if __name__ == '__main__':
     TOTAL_TRIALS = 100000
     game = KuhnPoker()
-    isb = ISB()
-    strategy = cfr.train(game, isb, TOTAL_TRIALS)
+    minimizer = CFRMinimizer(game, isg_basic, ag_basic)
+    minimizer.train(TOTAL_TRIALS)
+    strategy = minimizer.get_strategy()
 
     print('Player 2 always passes')
-    agent1 = StrategyAgent(strategy, isb)
-    agent2 = OneActionAgent('p')
+    agent1 = StrategyAgent(strategy, isg_basic, ag_basic)
+    agent2 = OneActionAgent(0)  # 0 is pass
     game.reset()
     game.play([agent1, agent2], 10_000)
 
     print('Player 2 always bets')
-    agent2 = OneActionAgent('b')
+    agent2 = OneActionAgent(1)  # 1 is bet
     game.reset()
     game.play([agent1, agent2], 10_000)
 
     print('Player 2 uses cfr')
-    agent2 = StrategyAgent(strategy, isb)
+    agent2 = StrategyAgent(strategy, isg_basic, ag_basic)
     game.reset()
     game.play([agent1, agent2], 10_000)
 

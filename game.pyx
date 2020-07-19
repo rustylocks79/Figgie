@@ -1,37 +1,3 @@
-# cython: profile=True
-
-from random import choice
-
-import numpy as np
-
-
-class Agent:
-    def __init__(self):
-        self.wins = 0
-        self.total_utility = 0
-
-    def get_action(self, game) -> int:
-        pass
-
-
-class ControllerAgent(Agent):
-    def get_action(self, game) -> int:
-        return input('Action: ')
-
-
-class RandomAgent(Agent):
-    def get_action(self, game) -> int:
-        actions = game.get_actions()
-        return choice(actions)
-
-
-class OneActionAgent(Agent):
-    def __init__(self, action: int):
-        super().__init__()
-        self.action = action
-
-    def get_action(self, game) -> int:
-        return self.action
 
 
 class Game:
@@ -44,12 +10,6 @@ class Game:
     def get_active_player(self) -> int:
         """
         :return: the active player in the games current state.
-        """
-        pass
-
-    def get_actions(self) -> np.ndarray:
-        """
-        :return: a list of string actions that can be preformed in the games current state.
         """
         pass
 

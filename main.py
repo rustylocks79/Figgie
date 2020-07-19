@@ -1,41 +1,12 @@
+import argparse
 import pickle
 import sys
 import time
-import argparse
 
-from figgie import Figgie, SUITS
-import cfr
-from cfr import StrategyAgent, InfoSetGenerator
-from game import RandomAgent
-
-
-class ISGBasic(InfoSetGenerator):
-
-    def __init__(self):
-        super().__init__('basic')
-
-    def generate(self, game) -> str:
-        result = ''
-        hand = game.cards[game.get_active_player()]
-        for suit in SUITS:
-            result += suit.to_abbr() + str(hand[suit.value])
-        result += ':'
-        for market in game.markets:
-            result += market.suit.to_abbr()
-            result += str(game.normalize_index(market.buying_player)) + str(
-                market.buying_price) if market.buying_price is not None else 'NN'
-            result += str(game.normalize_index(market.selling_player)) + str(
-                market.selling_price) if market.selling_price is not None else 'NN'
-        return result
-
-
-class ISGAdvanced(InfoSetGenerator):
-
-    def __init__(self):
-        super().__init__('advanced')
-
-    def generate(self, game) -> str:
-        return super().generate(game)
+from cfr import CFRMinimizer
+from agents import RandomAgent, StrategyAgent
+from figgie import Figgie
+from generators import isg_basic, isg_abstract, ag_basic, ag_abstract, am_abstract
 
 
 def save(strategy: dict, trials: int, info_set_method: str):
@@ -58,47 +29,68 @@ def load(file_name: str) -> dict:
     return strategy
 
 
-if __name__ == '__main__':
+def play(game: Figgie, agents: list, games: int):
+    print('Testing: ')
+    game.reset()
+    start_time = time.process_time()
+    game.play(agents, games)
+    total_time = time.process_time() - start_time
+    print('\ttime: {} seconds'.format(total_time))
+
+    print('Results: ')
+    for i, agent in enumerate(agents):
+        print('agent {}'.format(i))
+        print('\tag: {}'.format(agent.action_generator.__name__))
+        if agent.action_mapper is not None:
+            print('\tam: {}'.format(agent.action_mapper.__name__))
+        print('\twins: {}'.format(agent.wins))
+        print('\ttotal utility: {}'.format(agent.total_utility))
+        print('\tavg. utility: {}'.format(agent.total_utility / games))
+        if isinstance(agent, StrategyAgent):
+            print('\tisg: {}'.format(agent.info_set_generator.__name__))
+            print('\tunknown states: {}'.format(agent.unknown_states))
+            print('\tavg unknown states: {}'.format(agent.unknown_states / games))
+
+
+def main():
     parser = argparse.ArgumentParser(description='Train a strategy using CFR')
     parser.add_argument('-t', '--trials', type=int, default=10_000, help='number of trials to run. ')
+    parser.add_argument('-i', '--iterations', type=int, default=1, help='the number of times to train and run')
     parser.add_argument('-g', '--games', type=int, default=10_000, help='number of test games to run. ')
     args = parser.parse_args()
 
     game = Figgie()
-    isgb = ISGBasic()
-    isga = ISGAdvanced()
-
-    print('Using CFR to train Figgie. '.format(args.trials))
+    minimizer = CFRMinimizer(game, isg_basic, ag_abstract, am_abstract)
+    print('Parameters: ')
+    print('\titerations: {}'.format(args.iterations))
     print('\ttrials: {}'.format(args.trials))
-    print('\tgenerator: {}'.format(isgb.name))
-    start_time = time.process_time()
-    strategy = cfr.train(game, isgb, args.trials)
-    total_time = time.process_time() - start_time
-    print('\ttime: {} seconds'.format(total_time))
-
-    print('Strategy: ')
-    print('\tinfo sets: {}'.format(len(strategy)))
-    print('\tsize: {} bytes\n'.format(sys.getsizeof(strategy)))
-
-    save(strategy, args.trials, 'basic')
-
-    print('Testing Figgie')
     print('\tgames: {}'.format(args.games))
-    start_time = time.process_time()
-    agents = [RandomAgent(),
-              RandomAgent(),
-              RandomAgent(),
-              StrategyAgent(strategy, isgb)]
-    game.reset()
-    game.play(agents, args.games)
-    total_time = time.process_time() - start_time
-    print('\ttime: {} seconds'.format(total_time))
+    print('\tinfo set generator: {}'.format(minimizer.info_set_generator.__name__))
+    print('\taction generator: {}'.format(minimizer.action_generator.__name__))
+    print('\tinfo set generator: {}'.format(minimizer.action_mapper.__name__))
+    print()
 
-    for i in range(len(agents)):
-        print('agent {}'.format(i))
-        print('\twins: {}'.format(agents[i].wins))
-        print('\ttotal utility: {}'.format(agents[i].total_utility))
-        print('\tavg. utility: {}'.format(agents[i].total_utility / args.games))
-        if isinstance(agents[i], StrategyAgent):
-            print('\tunknown states: {}'.format(agents[i].unknown_states))
-            print('\tavg unknown states: {}'.format(agents[i].unknown_states / args.games))
+    for i in range(args.iterations):
+        print('Training: ')
+        start_time = time.process_time()
+        minimizer.train(args.trials)
+        strategy = minimizer.get_strategy()
+        total_time = time.process_time() - start_time
+        print('\ttime: {} seconds'.format(total_time))
+
+        print('Strategy: ')
+        print('\tinfo sets: {}'.format(len(strategy)))
+        print('\tsize: {} bytes\n'.format(sys.getsizeof(strategy)))
+
+        save(strategy, args.trials * (i + 1), 'basic')
+
+        agents = [RandomAgent(ag_basic),
+                  RandomAgent(ag_basic),
+                  RandomAgent(ag_basic),
+                  StrategyAgent(strategy, isg_basic, ag_abstract, am_abstract)]
+
+        play(game, agents, args.games)
+
+
+if __name__ == '__main__':
+    main()

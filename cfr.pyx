@@ -1,36 +1,7 @@
-# cython: profile=True
-
-from random import choice
-
 import numpy as np
 
-from game import Game, Agent
+from game import Game
 from my_math import choice_weighted
-
-
-class InfoSetGenerator:
-    def __init__(self, name):
-        self.name = name
-
-    def generate(self, game) -> str:
-        pass
-
-
-class StrategyAgent(Agent):
-    def __init__(self, strategy: dict, info_set_generator: InfoSetGenerator):
-        super().__init__()
-        self.strategy = strategy
-        self.info_set_generator = info_set_generator
-        self.unknown_states = 0
-
-    def get_action(self, game) -> int:
-        info_set = self.info_set_generator.generate(game)
-        actions = game.get_actions()
-        if info_set in self.strategy:
-            return actions[choice_weighted(self.strategy[info_set])]
-        else:
-            self.unknown_states += 1
-            return choice(actions)
 
 
 class GameNode:
@@ -81,61 +52,69 @@ class GameNode:
         return result
 
 
-def train(game: Game, info_set_generator: InfoSetGenerator, trials: int) -> dict:
-    game_tree = {}
-    for i in range(trials):
-        __train(game, info_set_generator, game_tree, 1.0, 1.0, i % 2)
-        game.reset()
+class CFRMinimizer:
+    def __init__(self, game: Game, info_set_generator, action_generator, action_mapper=None):
+        self.game = game
+        self.info_set_generator = info_set_generator
+        self.action_generator = action_generator
+        self.action_mapper = action_mapper
+        self.game_tree = {}
 
-    strategy = {}
-    for key in game_tree:
-        strategy[key] = game_tree[key].get_trained_strategy()
-    return strategy
+    def train(self, trials: int) -> dict:
+        for i in range(trials):
+            self.__train(1.0, 1.0, i % 2)
+            self.game.reset()
 
+    def get_strategy(self) -> dict:
+        strategy = {}
+        for key in self.game_tree:
+            strategy[key] = self.game_tree[key].get_trained_strategy()
+        return strategy
 
-def __train(game: Game, info_set_generator: InfoSetGenerator, game_tree: map, pi: float, pi_prime: float, training_player: int) -> tuple:
-    player = game.get_active_player()
-    actions = game.get_actions()
+    def __train(self, pi: float, pi_prime: float, training_player: int) -> tuple:
+        player = self.game.get_active_player()
+        actions = self.action_generator(self.game)
 
-    if game.is_finished():
-        utility = game.get_utility()
-        return utility[player] / pi_prime, 1.0
+        if self.game.is_finished():
+            utility = self.game.get_utility()
+            return utility[player] / pi_prime, 1.0
 
-    info_set = info_set_generator.generate(game)
-    if info_set in game_tree:
-        node = game_tree[info_set]
-    else:
-        node = GameNode(actions)
-        game_tree[info_set] = node
+        info_set = self.info_set_generator(self.game)
+        if info_set in self.game_tree:
+            node = self.game_tree[info_set]
+        else:
+            node = GameNode(actions)
+            self.game_tree[info_set] = node
 
-    strategy = node.get_strategy()
+        strategy = node.get_strategy()
 
-    epsilon = 0.6
-    if player == training_player:
-        probability = np.zeros(len(actions), dtype=float)
-        for action in range(len(actions)):
-            probability[action] = epsilon / len(actions) + (1.0 - epsilon) * strategy[action]
-    else:
-        probability = np.copy(strategy)
+        epsilon = 0.6
+        if player == training_player:
+            probability = np.zeros(len(actions), dtype=float)
+            for action in range(len(actions)):
+                probability[action] = epsilon / len(actions) + (1.0 - epsilon) * strategy[action]
+        else:
+            probability = np.copy(strategy)
 
-    chosen_action = choice_weighted(probability)
-    game.preform(actions[chosen_action])
-    result = __train(game, info_set_generator, game_tree, pi * strategy[chosen_action], pi_prime * probability[chosen_action],
-                     training_player) if player == training_player else __train(game, info_set_generator, game_tree, pi,
-                                                                                pi_prime, training_player)
-    util = -result[0]
-    p_tail = result[1]
+        chosen_action = choice_weighted(probability)
+        if self.action_mapper is not None:
+            self.game.preform(self.action_mapper(self.game, actions[chosen_action]))
+        else:
+            self.game.preform(actions[chosen_action])
+        result = self.__train(pi * strategy[chosen_action], pi_prime * probability[chosen_action], training_player) if player == training_player else self.__train(pi, pi_prime, training_player)
+        util = -result[0]
+        p_tail = result[1]
 
-    if player == training_player:
-        W = util * p_tail
-        for action in range(len(actions)):
-            regret = W * (1 - strategy[chosen_action]) if action == chosen_action else -W * strategy[chosen_action]
-            node.sum_regret[action] += regret
-    else:
-        for action in range(len(actions)):
-            node.sum_strategy[action] += strategy[action] / pi_prime
+        if player == training_player:
+            W = util * p_tail
+            for action in range(len(actions)):
+                regret = W * (1 - strategy[chosen_action]) if action == chosen_action else -W * strategy[chosen_action]
+                node.sum_regret[action] += regret
+        else:
+            for action in range(len(actions)):
+                node.sum_strategy[action] += strategy[action] / pi_prime
 
-    if player == training_player:
-        return util, p_tail * strategy[chosen_action]
-    else:
-        return util, p_tail
+        if player == training_player:
+            return util, p_tail * strategy[chosen_action]
+        else:
+            return util, p_tail

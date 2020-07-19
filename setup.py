@@ -1,6 +1,7 @@
-from setuptools import Extension
 from distutils.core import setup
+
 from Cython.Build import cythonize
+from setuptools import Extension
 
 CYTHON = True
 
@@ -9,7 +10,7 @@ if CYTHON:
     Cython.Compiler.Options.annotate = False
 
     extensions = [
-        Extension(name='*', sources=['*.pyx']),
+        Extension(name='*', sources=['*.pyx'])
     ]
 
     setup(
@@ -21,7 +22,7 @@ if CYTHON:
         author='jeremy',
         author_email='',
         description='',
-        ext_modules=cythonize(extensions, compiler_directives={'language_level': "3"}, annotate=True, build_dir='build')
+        ext_modules=cythonize(extensions, compiler_directives={'language_level': '3', 'profile': True}, annotate=True, build_dir='build')
     )
 else:
     setup(
