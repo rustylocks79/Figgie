@@ -39,8 +39,8 @@ class Game:
                 player = self.get_active_player()
                 self.preform(agents[player].get_action(self))
             utility = self.get_utility()
-            for i in range(len(agents)):
-                agents[i].total_utility += utility[i]
+            for j, agent in enumerate(agents):
+                agent.total_utility += utility[j]
             max_utility = max(utility)
             winners = [j for j in range(len(utility)) if utility[j] == max_utility]
             for winner in winners:

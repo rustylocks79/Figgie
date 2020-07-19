@@ -3,7 +3,7 @@ from distutils.core import setup
 from Cython.Build import cythonize
 from setuptools import Extension
 
-CYTHON = True
+CYTHON = False
 
 if CYTHON:
     import Cython.Compiler.Options

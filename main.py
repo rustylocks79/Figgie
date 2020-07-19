@@ -60,19 +60,14 @@ def main():
     print('\tinfo set generator: {}'.format(minimizer.action_mapper.__name__))
     print()
 
-    agents = [RandomAgent(ag_basic),
-              RandomAgent(ag_basic),
-              RandomAgent(ag_basic),
-              StrategyAgent(None, isg_basic, ag_abstract, am_abstract)]
-
-    for i, agent in enumerate(agents):
-        print('agent {} ({})'.format(i, type(agent)))
-        if isinstance(agent, StrategyAgent):
-            print('\tisg: {}'.format(agent.info_set_generator.__name__))
-        print('\tag: {}'.format(agent.action_generator.__name__))
-        if agent.action_mapper is not None:
-            print('\tam: {}'.format(agent.action_mapper.__name__))
-    print()
+    # for i, agent in enumerate(agents):
+    #     print('agent {} ({})'.format(i, type(agent)))
+    #     if isinstance(agent, StrategyAgent):
+    #         print('\tisg: {}'.format(agent.info_set_generator.__name__))
+    #     print('\tag: {}'.format(agent.action_generator.__name__))
+    #     if agent.action_mapper is not None:
+    #         print('\tam: {}'.format(agent.action_mapper.__name__))
+    # print()
 
     for i in range(1, args.iterations + 1):
         print('Iteration: {}'.format(i))
@@ -96,8 +91,12 @@ def main():
         total_time = time.process_time() - start_time
         print('\tSaving to {} took {} seconds'.format(file_name, total_time))
 
-        agents[3].strategy = strategy
+        agents = [RandomAgent(ag_basic),
+                  RandomAgent(ag_basic),
+                  RandomAgent(ag_basic),
+                  StrategyAgent(strategy, isg_basic, ag_abstract, am_abstract)]
         play(game, agents, args.games)
+
         print('---------------------------------------------------')
 
 
