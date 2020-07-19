@@ -6,6 +6,7 @@ from my_math import choice_weighted
 
 class GameNode:
     def __init__(self, actions: np.ndarray):
+        self.actions = actions
         self.num_actions = len(actions)
         self.sum_regret = np.zeros(len(actions), dtype=float)
         self.sum_strategy = np.zeros(len(actions), dtype=float)

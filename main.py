@@ -17,12 +17,8 @@ def save(strategy: dict, trials: int, info_set_method: str) -> str:
 
 
 def load(file_name: str) -> dict:
-    print('Loading from file: ')
-    start_time = time.process_time()
     with open(file_name, 'rb') as file:
         strategy = pickle.load(file)
-    total_time = time.process_time() - start_time
-    print('Loading from file took {} \n'.format(total_time))
     return strategy
 
 
@@ -50,7 +46,7 @@ def main():
     args = parser.parse_args()
 
     game = Figgie()
-    minimizer = CFRMinimizer(game, isg_basic, ag_abstract, am_abstract)
+    minimizer = CFRMinimizer(game, isg_abstract, ag_abstract, am_abstract)
     print('Parameters: ')
     print('\titerations: {}'.format(args.iterations))
     print('\ttrials: {}'.format(args.trials))
@@ -94,7 +90,7 @@ def main():
         agents = [RandomAgent(ag_basic),
                   RandomAgent(ag_basic),
                   RandomAgent(ag_basic),
-                  StrategyAgent(strategy, isg_basic, ag_abstract, am_abstract)]
+                  StrategyAgent(strategy, isg_abstract, ag_abstract, am_abstract)]
         play(game, agents, args.games)
 
         print('---------------------------------------------------')

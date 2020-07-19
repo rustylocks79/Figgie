@@ -22,7 +22,39 @@ def isg_basic(figgie) -> str:
 
 
 def isg_abstract(figgie):
-    pass
+    result = ''
+    hand = figgie.cards[figgie.get_active_player()]
+    me = figgie.get_active_player()
+    for suit in SUITS:
+        result += suit.to_abbr() + str(hand[suit.value])
+    result += ':'
+    for market in figgie.markets:
+        result += market.suit.to_abbr()
+
+        #buying
+        if market.buying_player == me:
+            result += 'M'  # ME
+        else:
+            result += 'O'  # Other
+        if market.buying_price is None:
+            result += 'N'  # None
+        elif market.buying_price == 9:
+            result += '9'  # can't out bid
+        else:
+            result += 'B'  # can buy
+
+        # selling
+        if market.selling_player == me:
+            result += 'M'  # ME
+        else:
+            result += 'O'  # Other
+        if market.selling_price is None:
+            result += 'N'  # None
+        elif market.selling_price == 1:
+            result += '1'  # can't out ask
+        else:
+            result += 'S'  # can sell
+    return result
 
 
 def ag_basic(figgie) -> np.ndarray:
