@@ -1,12 +1,71 @@
 import argparse
 import pickle
-import sys
 import time
+from random import randint
 
-from api.cfr import CFRMinimizer
-from api.agent import RandomAgent, StrategyAgent
-from games.figgie import Figgie
-from games.generators import isg_abstract, ag_basic, ag_abstract, am_abstract
+import numpy as np
+
+from api.game import Game
+from api.random_agent import RandomAgent
+from api.strategy_agent import StrategyAgent
+from games.figgie import Figgie, SUITS, ASK, BID, BUY, SELL, from_value
+
+
+class BasicAgent(StrategyAgent):
+
+    def generate_info_set(self, game: Game) -> str:
+        result = ''
+        hand = game.cards[game.get_active_player()]
+        for suit in SUITS:
+            result += suit.to_abbr() + str(hand[suit.value])
+        result += ':'
+        for market in game.markets:
+            result += market.suit.to_abbr()
+            result += str(game.normalize_index(market.buying_player)) + str(
+                market.buying_price) if market.buying_price is not None else 'NN'
+            result += str(game.normalize_index(market.selling_player)) + str(
+                market.selling_price) if market.selling_price is not None else 'NN'
+        return result
+
+    def generate_actions(self, game: Game) -> np.ndarray:
+        hand = game.cards[game.active_player]
+        result = []
+        for suit in SUITS:
+            market = game.markets[suit.value]
+            suit_code = suit.value * 10
+            # asking
+            if market.selling_price != 1 and hand[suit.value] >= 1:
+                result.append(ASK * 100 + suit_code)
+
+            # bidding
+            if market.buying_price != 9:
+                result.append((BID * 100) + suit_code)
+
+            # buying
+            if market.selling_price is not None and market.selling_player != game.get_active_player():
+                result.append((BUY * 100) + suit_code)
+
+            # selling
+            if (market.buying_price is not None and market.buying_player != game.get_active_player()) and hand[
+                suit.value] >= 1:
+                result.append((SELL * 100) + suit_code)
+        return np.array(result, dtype=int)
+
+    def resolve_action(self, game: Game, initial_action: int) -> int:
+        starting_action = initial_action
+        op = initial_action // 100
+        initial_action %= 100
+        suit = from_value(initial_action // 10)
+        if op == ASK:
+            selling_price = game.markets[suit.value].selling_price
+            return starting_action + randint(1, selling_price - 1 if selling_price is not None else 9)
+        elif op == BID:
+            buying_price = game.markets[suit.value].buying_price
+            return starting_action + randint(buying_price + 1 if buying_price is not None else 1, 9)
+        elif op == BUY or op == SELL:
+            return starting_action
+        else:
+            raise ValueError('invalid initial action giving to mapping')
 
 
 def save(strategy: dict, trials: int, info_set_method: str) -> str:
@@ -46,51 +105,33 @@ def main():
     args = parser.parse_args()
 
     game = Figgie()
-    minimizer = CFRMinimizer(game, isg_abstract, ag_abstract, am_abstract)
+    agent = BasicAgent()
     print('Parameters: ')
     print('\titerations: {}'.format(args.iterations))
     print('\ttrials: {}'.format(args.trials))
     print('\tgames: {}'.format(args.games))
-    print('\tinfo set generator: {}'.format(minimizer.info_set_generator.__name__))
-    print('\taction generator: {}'.format(minimizer.action_generator.__name__))
-    print('\tinfo set generator: {}'.format(minimizer.action_mapper.__name__))
     print()
-
-    # for i, agent in enumerate(agents):
-    #     print('agent {} ({})'.format(i, type(agent)))
-    #     if isinstance(agent, StrategyAgent):
-    #         print('\tisg: {}'.format(agent.info_set_generator.__name__))
-    #     print('\tag: {}'.format(agent.action_generator.__name__))
-    #     if agent.action_mapper is not None:
-    #         print('\tam: {}'.format(agent.action_mapper.__name__))
-    # print()
 
     for i in range(1, args.iterations + 1):
         print('Iteration: {}'.format(i))
 
         start_time = time.process_time()
-        minimizer.train(args.trials)
+        agent.train(game, args.trials)
         total_time = time.process_time() - start_time
         print('\tTraining took {} seconds '.format(total_time))
 
-        start_time = time.process_time()
-        strategy = minimizer.get_strategy()
-        total_time = time.process_time() - start_time
-        print('\tExtracting took {} seconds'.format(total_time))
-
         print('\tStrategy: ')
-        print('\t\tinfo sets: {}'.format(len(strategy)))
-        print('\t\tsize: {} bytes'.format(sys.getsizeof(strategy)))
+        print('\t\tinfo sets: {}'.format(len(agent.game_tree)))
 
         start_time = time.process_time()
-        file_name = save(strategy, args.trials * i, 'basic')
+        file_name = save(agent.game_tree, args.trials * i, 'basic')
         total_time = time.process_time() - start_time
         print('\tSaving to {} took {} seconds'.format(file_name, total_time))
 
-        agents = [RandomAgent(ag_basic),
-                  RandomAgent(ag_basic),
-                  RandomAgent(ag_basic),
-                  StrategyAgent(strategy, isg_abstract, ag_abstract, am_abstract)]
+        agents = [RandomAgent(),
+                  RandomAgent(),
+                  RandomAgent(),
+                  agent]
         play(game, agents, args.games)
 
         print('---------------------------------------------------')

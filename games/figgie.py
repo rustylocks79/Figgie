@@ -120,6 +120,43 @@ class Figgie(Game):
         """
         return (index + self.active_player) % 4
 
+    def get_actions(self) -> np.ndarray:
+        hand = self.cards[self.active_player]
+        result = []
+        for suit in SUITS:
+            market = self.markets[suit.value]
+            suit_code = suit.value * 10
+            # asking
+            if hand[suit.value] >= 1:
+                ask_code = ASK * 100
+                if market.selling_price is not None:
+                    for i in range(1, market.selling_price):
+                        result.append(ask_code + suit_code + i)
+                else:
+                    for i in range(1, 10):
+                        result.append(ask_code + suit_code + i)
+
+            # bidding
+            bid_code = BID * 100
+            if market.buying_price is not None:
+                for i in range(market.buying_price + 1, 10):
+                    result.append(bid_code + suit_code + i)
+            else:
+                for i in range(1, 10):
+                    result.append(bid_code + suit_code + i)
+
+            # buying
+            buy_code = BUY * 100
+            if market.selling_price is not None and market.selling_player != self.active_player:
+                result.append(buy_code + suit_code)
+
+            # selling
+            sell_code = SELL * 100
+            if (market.buying_price is not None and market.buying_player != self.active_player) and hand[
+                suit.value] >= 1:
+                result.append(sell_code + suit_code)
+        return np.array(result, dtype=int)
+
     def preform(self, action: int) -> None:
         op = action // 100
         action %= 100

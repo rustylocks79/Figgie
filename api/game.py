@@ -1,3 +1,4 @@
+import numpy as np
 
 
 class Game:
@@ -11,6 +12,9 @@ class Game:
         """
         :return: the active player in the games current state.
         """
+        pass
+
+    def get_actions(self) -> np.ndarray:
         pass
 
     def preform(self, action: int) -> None:
