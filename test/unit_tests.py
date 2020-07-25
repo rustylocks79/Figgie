@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from figgie import Figgie, Suit, STARTING_CHIPS, SUITS, ASK, BID, BUY, SELL
+from games.figgie import Figgie, Suit, STARTING_CHIPS, SUITS, ASK, BID, BUY, SELL
 
 
 class Testing(unittest.TestCase):

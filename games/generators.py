@@ -2,7 +2,7 @@ from random import randint
 
 import numpy as np
 
-from figgie import SUITS, from_value, ASK, BID, BUY, SELL
+from games.figgie import SUITS, from_value, ASK, BID, BUY, SELL
 
 
 def isg_basic(figgie) -> str:

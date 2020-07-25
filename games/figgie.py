@@ -3,7 +3,7 @@ from random import choice, randint, shuffle
 
 import numpy as np
 
-from game import Game
+from api.game import Game
 
 NUM_PLAYERS = 4
 NUM_ROUNDS = 8

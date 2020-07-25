@@ -1,9 +1,12 @@
 from math import sqrt
 from random import randint
 
-from agents import StrategyAgent, OneActionAgent
-from cfr import CFRMinimizer
-from game import *
+import numpy as np
+
+from api.cfr import CFRMinimizer
+from api.game import *
+from api.one_action_agent import OneActionAgent
+from api.strategy_agent import StrategyAgent
 
 
 def isg_basic(kuhn) -> str:

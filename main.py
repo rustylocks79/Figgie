@@ -3,10 +3,10 @@ import pickle
 import sys
 import time
 
-from cfr import CFRMinimizer
-from agents import RandomAgent, StrategyAgent
-from figgie import Figgie
-from generators import isg_basic, isg_abstract, ag_basic, ag_abstract, am_abstract
+from api.cfr import CFRMinimizer
+from api.agent import RandomAgent, StrategyAgent
+from games.figgie import Figgie
+from games.generators import isg_abstract, ag_basic, ag_abstract, am_abstract
 
 
 def save(strategy: dict, trials: int, info_set_method: str) -> str:

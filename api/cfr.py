@@ -1,15 +1,12 @@
 import numpy as np
 
-from game import Game
-from my_math import choice_weighted
+from api.game import Game
 
 
 class GameNode:
-    def __init__(self, actions: np.ndarray):
-        self.actions = actions
-        self.num_actions = len(actions)
-        self.sum_regret = np.zeros(len(actions), dtype=float)
-        self.sum_strategy = np.zeros(len(actions), dtype=float)
+    def __init__(self, num_actions: int):
+        self.sum_regret = np.zeros(num_actions, dtype=float)
+        self.sum_strategy = np.zeros(num_actions, dtype=float)
 
     def get_strategy(self) -> np.ndarray:
         total = 0
@@ -18,11 +15,11 @@ class GameNode:
                 total += regret
 
         if total > 0.0:
-            strategy = np.zeros(self.num_actions, dtype=float)
-            for i in range(self.num_actions):
-                strategy[i] = max(0.0, self.sum_regret[i] / total)
+            strategy = np.zeros(len(self.sum_regret), dtype=float)
+            for i, value in enumerate(self.sum_regret):
+                strategy[i] = max(0.0, value / total)
         else:
-            return np.full(self.num_actions, 1.0 / self.num_actions, dtype=float)
+            return np.full(len(self.sum_regret), 1.0 / len(self.sum_regret), dtype=float)
 
         return strategy
 
@@ -33,11 +30,11 @@ class GameNode:
                 total += regret
 
         if total > 0.0:
-            strategy = np.zeros(self.num_actions, dtype=float)
-            for i in range(self.num_actions):
-                strategy[i] = max(0.0, self.sum_strategy[i] / total)
+            strategy = np.zeros(len(self.sum_strategy), dtype=float)
+            for i, value in enumerate(self.sum_strategy):
+                strategy[i] = max(0.0, value / total)
         else:
-            return np.full(self.num_actions, 1.0 / self.num_actions, dtype=float)
+            return np.full(len(self.sum_strategy), 1.0 / len(self.sum_strategy), dtype=float)
 
         return strategy
 
@@ -61,7 +58,7 @@ class CFRMinimizer:
         self.action_mapper = action_mapper
         self.game_tree = {}
 
-    def train(self, trials: int) -> dict:
+    def train(self, trials: int):
         for i in range(trials):
             self.__train(1.0, 1.0, i % 2)
             self.game.reset()
@@ -84,7 +81,7 @@ class CFRMinimizer:
         if info_set in self.game_tree:
             node = self.game_tree[info_set]
         else:
-            node = GameNode(actions)
+            node = GameNode(len(actions))
             self.game_tree[info_set] = node
 
         strategy = node.get_strategy()
@@ -97,7 +94,7 @@ class CFRMinimizer:
         else:
             probability = np.copy(strategy)
 
-        chosen_action = choice_weighted(probability)
+        chosen_action = np.random.choice([i for i in range(len(probability))], p=probability)
         if self.action_mapper is not None:
             self.game.preform(self.action_mapper(self.game, actions[chosen_action]))
         else:
