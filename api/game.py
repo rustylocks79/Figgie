@@ -17,6 +17,9 @@ class Game:
     def get_actions(self) -> np.ndarray:
         pass
 
+    def get_action_text(self, action: int) -> str:
+        pass
+
     def preform(self, action: int) -> None:
         """
         :param action: the string action to be preformed
@@ -37,11 +40,14 @@ class Game:
         """
         pass
 
-    def play(self, agents: list, trials: int):
+    def play(self, agents: list, trials: int, verbose=False):
         for i in range(trials):
             while not self.is_finished():
                 player = self.get_active_player()
-                self.preform(agents[player].get_action(self))
+                action = agents[player].get_action(self)
+                if verbose:
+                    print('agent {}: {}'.format(player, self.get_action_text(action)))
+                self.preform(action)
             utility = self.get_utility()
             for j, agent in enumerate(agents):
                 agent.total_utility += utility[j]

@@ -157,6 +157,19 @@ class Figgie(Game):
                 result.append(sell_code + suit_code)
         return np.array(result, dtype=int)
 
+    def get_action_text(self, action: int) -> str:
+        op = action // 100
+        action %= 100
+        suit = from_value(action // 10)
+        if op == ASK:
+            return 'ask {} {}'.format(suit.to_abbr(), action % 10)
+        elif op == BID:
+            return 'bid {} {}'.format(suit.to_abbr(), action % 10)
+        elif op == BUY:
+            return 'buy {}'.format(suit.to_abbr())
+        elif op == SELL:
+            return 'sell {}'.format(suit.to_abbr())
+
     def preform(self, action: int) -> None:
         op = action // 100
         action %= 100

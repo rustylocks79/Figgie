@@ -46,8 +46,7 @@ class BasicAgent(StrategyAgent):
                 result.append((BUY * 100) + suit_code)
 
             # selling
-            if (market.buying_price is not None and market.buying_player != game.get_active_player()) and hand[
-                suit.value] >= 1:
+            if (market.buying_price is not None and market.buying_player != game.get_active_player()) and hand[suit.value] >= 1:
                 result.append((SELL * 100) + suit_code)
         return np.array(result, dtype=int)
 
@@ -58,20 +57,20 @@ class BasicAgent(StrategyAgent):
         suit = from_value(initial_action // 10)
         if op == ASK:
             selling_price = game.markets[suit.value].selling_price
-            return starting_action + randint(1, selling_price - 1 if selling_price is not None else 9)
+            return starting_action + ((selling_price - 1) if selling_price is not None else 9)
         elif op == BID:
             buying_price = game.markets[suit.value].buying_price
-            return starting_action + randint(buying_price + 1 if buying_price is not None else 1, 9)
+            return starting_action + ((buying_price + 1) if buying_price is not None else 1)
         elif op == BUY or op == SELL:
             return starting_action
         else:
             raise ValueError('invalid initial action giving to mapping')
 
 
-def play(game: Figgie, agents: list, games: int):
+def play(game: Figgie, agents: list, games: int, verbose=False):
     game.reset()
     start_time = time.process_time()
-    game.play(agents, games)
+    game.play(agents, games, verbose=verbose)
     total_time = time.process_time() - start_time
     print('\tTesting took {} seconds'.format(total_time))
 
