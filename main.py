@@ -68,19 +68,6 @@ class BasicAgent(StrategyAgent):
             raise ValueError('invalid initial action giving to mapping')
 
 
-def save(strategy: dict, trials: int, info_set_method: str) -> str:
-    file_name = 'strategies/strategy_{}_{}.pickle'.format(trials, info_set_method)
-    with open(file_name, 'wb') as file:
-        pickle.dump(strategy, file)
-    return file_name
-
-
-def load(file_name: str) -> dict:
-    with open(file_name, 'rb') as file:
-        strategy = pickle.load(file)
-    return strategy
-
-
 def play(game: Figgie, agents: list, games: int):
     game.reset()
     start_time = time.process_time()
@@ -123,16 +110,12 @@ def main():
         print('\tStrategy: ')
         print('\t\tinfo sets: {}'.format(len(agent.game_tree)))
 
-        start_time = time.process_time()
-        file_name = save(agent.game_tree, args.trials * i, 'basic')
-        total_time = time.process_time() - start_time
-        print('\tSaving to {} took {} seconds'.format(file_name, total_time))
-
         agents = [RandomAgent(),
                   RandomAgent(),
                   RandomAgent(),
                   agent]
         play(game, agents, args.games)
+        agent.reset()
 
         print('---------------------------------------------------')
 

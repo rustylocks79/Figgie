@@ -1,3 +1,4 @@
+import shelve
 from random import choice
 
 import numpy as np
@@ -56,7 +57,7 @@ class GameNode:
 class StrategyAgent(Agent):
     def __init__(self):
         super().__init__()
-        self.game_tree = {}
+        self.game_tree = shelve.open('strategies/basic')
         self.unknown_states = 0
 
     def get_action(self, game) -> int:
@@ -68,6 +69,10 @@ class StrategyAgent(Agent):
             self.unknown_states += 1
             action = choice(actions)
         return self.resolve_action(game, action)
+
+    def reset(self) -> None:
+        super().reset()
+        self.unknown_states = 0
 
     def generate_info_set(self, game: Game) -> str:
         pass
@@ -96,7 +101,6 @@ class StrategyAgent(Agent):
             node = self.game_tree[info_set]
         else:
             node = GameNode(len(actions))
-            self.game_tree[info_set] = node
 
         strategy = node.get_strategy()
 
@@ -122,6 +126,8 @@ class StrategyAgent(Agent):
         else:
             for action in range(len(actions)):
                 node.sum_strategy[action] += strategy[action] / pi_prime
+
+        self.game_tree[info_set] = node
 
         if player == training_player:
             return util, p_tail * strategy[action_index]
