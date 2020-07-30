@@ -2,6 +2,7 @@ import argparse
 import time
 
 from game.agent.one_action_agent import OneActionAgent
+from game.agent.random_agent import RandomAgent
 from game.agent.strategy_agent import StrategyAgent
 from game.agent.basic_agent import BasicAgent
 from game.model.simple_model import SimpleModel
@@ -26,6 +27,7 @@ def play(game: Figgie, agents: list, games: int, verbose=False):
 def main():
     parser = argparse.ArgumentParser(description='Train a strategy using CFR')
     parser.add_argument('-g', '--games', type=int, default=10_000, help='number of test games to run. ')
+    parser.add_argument('-v', '--verbose', type=bool, default=False, help='output actions')
     args = parser.parse_args()
 
     game = Figgie()
@@ -37,7 +39,12 @@ def main():
               BasicAgent(1, SimpleModel()),
               BasicAgent(2, SimpleModel()),
               BasicAgent(3, SimpleModel())]
-    play(game, agents, args.games)
+
+    # agents = [RandomAgent(0),
+    #           RandomAgent(1),
+    #           RandomAgent(2),
+    #           RandomAgent(3)]
+    play(game, agents, args.games, args.verbose)
 
 
 if __name__ == '__main__':

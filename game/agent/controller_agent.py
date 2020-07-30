@@ -4,6 +4,7 @@ from game.figgie import Figgie, SUITS, Suit
 
 class ControllerAgent(Agent):
     def get_action(self, figgie: Figgie) -> tuple:
+        # TODO: fix
         hand = figgie.cards[self.index]
         print('Hand: {} clubs, {} diamonds, {} hearts, {} spades'.format(hand[0], hand[1], hand[2], hand[3]))
         for suit in SUITS:

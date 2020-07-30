@@ -1,77 +1,12 @@
 from queue import Queue
 from random import choice, randint, shuffle
-from enum import Enum
 import numpy as np
+
+from game.suit import Suit, SUITS
 
 NUM_PLAYERS = 4
 NUM_ROUNDS = 8
 STARTING_CHIPS = 250
-
-
-class Suit(Enum):
-    CLUBS = 0
-    DIAMONDS = 1
-    HEARTS = 2
-    SPADES = 3
-
-    def opposite(self):
-        if self == Suit.CLUBS:
-            return Suit.SPADES
-        elif self == Suit.DIAMONDS:
-            return Suit.HEARTS
-        elif self == Suit.HEARTS:
-            return Suit.DIAMONDS
-        elif self == Suit.SPADES:
-            return Suit.CLUBS
-
-    def __str__(self):
-        if self == Suit.CLUBS:
-            return 'clubs'
-        elif self == Suit.DIAMONDS:
-            return 'diamonds'
-        elif self == Suit.HEARTS:
-            return 'hearts'
-        elif self == Suit.SPADES:
-            return 'spades'
-
-    def to_abbr(self) -> str:
-        if self == Suit.CLUBS:
-            return 'C'
-        elif self == Suit.DIAMONDS:
-            return 'D'
-        elif self == Suit.HEARTS:
-            return 'H'
-        elif self == Suit.SPADES:
-            return 'S'
-
-    @staticmethod
-    def from_abbr(value: str):
-        if value == 'C':
-            return Suit.CLUBS
-        elif value == 'D':
-            return Suit.DIAMONDS
-        elif value == 'H':
-            return Suit.HEARTS
-        elif value == 'S':
-            return Suit.SPADES
-        else:
-            raise ValueError('Invalid suit abbr {}'.format(value))
-
-    @staticmethod
-    def from_value(value: int):
-        if value == Suit.CLUBS.value:
-            return Suit.CLUBS
-        elif value == Suit.DIAMONDS.value:
-            return Suit.DIAMONDS
-        elif value == Suit.HEARTS.value:
-            return Suit.HEARTS
-        elif value == Suit.SPADES.value:
-            return Suit.SPADES
-        else:
-            raise ValueError('Invalid suit value {}'.format(value))
-
-
-SUITS = [Suit.CLUBS, Suit.DIAMONDS, Suit.HEARTS, Suit.SPADES]
 
 
 class Figgie:
@@ -84,9 +19,9 @@ class Figgie:
                                  Market(Suit.DIAMONDS, self),
                                  Market(Suit.HEARTS, self),
                                  Market(Suit.SPADES, self)], dtype=Market)
-        self.active_player = 0
         self.queue = Queue(4)
         self.__new_queue()
+        self.active_player = self.queue.get()
         self.round = 0
 
     def reset(self) -> None:
@@ -96,8 +31,8 @@ class Figgie:
         self.deal()
         self.chips = np.full(NUM_PLAYERS, STARTING_CHIPS, dtype=int)
         self.clear_markets()
-        self.active_player = 0
         self.__new_queue()
+        self.active_player = self.queue.get()
         self.round = 0
 
     def clear_markets(self) -> None:
@@ -137,55 +72,28 @@ class Figgie:
         """
         return self.active_player
 
-    def normalize_index(self, index) -> int:
-        """
-        :param index: the actual index
-        :return: converts the index to an index assuming that the actual player is always player 0.
-        """
-        result = index - self.active_player
-        if result < 0:
-            result += 4
-        return result
-
-    def denormalize_index(self, index) -> int:
-        """
-        :param index: a normalized index
-        :return: the denormalized index
-        """
-        return (index + self.active_player) % 4
-
-    def preform(self, action: tuple) -> None:
+    def preform(self, action) -> None:
         """
         :param action: the string action to be preformed
         :return: change the state of the game by preforming the provided action.
         """
 
-        operation = action[0]
-        if operation == 'ask':
-            suit = action[1]
-            price = action[2]
-            self.markets[suit.value].ask(self.active_player, price)
-        elif operation == 'bid':
-            suit = action[1]
-            price = action[2]
-            self.markets[suit.value].bid(self.active_player, price)
-        elif operation == 'buy':
-            suit = action[1]
-            self.markets[suit.value].buy(self.active_player)
+        if action.operation == 'ask':
+            self.markets[action.suit.value].ask(self.active_player, action.selling_price)
+        elif action.operation == 'bid':
+            self.markets[action.suit.value].bid(self.active_player, action.buying_price)
+        elif action.operation == 'buy':
+            self.markets[action.suit.value].buy(self.active_player)
             self.clear_markets()
-        elif operation == 'sell':
-            suit = action[1]
-            self.markets[suit.value].sell(self.active_player)
+        elif action.operation == 'sell':
+            self.markets[action.suit.value].sell(self.active_player)
             self.clear_markets()
-        elif operation == 'at':
-            suit = action[1]
-            price1 = action[2]
-            price2 = action[3]
-            self.markets[suit.value].at(self.active_player, price1, price2)
-        elif operation == 'pass':
+        elif action.operation == 'at':
+            self.markets[action.suit.value].at(self.active_player, action.buying_price, action.selling_price)
+        elif action.operation == 'pass':
             pass
         else:
-            raise ValueError('Unknown operation: {}'.format(operation))
+            raise ValueError('Unknown operation: {}'.format(action.operation))
 
         if self.queue.empty():
             self.__new_queue()
@@ -225,7 +133,7 @@ class Figgie:
                 player = self.get_active_player()
                 action = agents[player].get_action(self)
                 if verbose:
-                    print('agent {}: {}', player, action)
+                    print(str(action))
                 self.preform(action)
             utility = self.get_utility()
             for j, agent in enumerate(agents):
@@ -291,7 +199,8 @@ class Market:
         self.buying_price = amount
         self.buying_player = player
 
-    def at(self, buying_price: int, selling_price: int, player: int) -> None:
+    def at(self, player: int, buying_price: int, selling_price: int) -> None:
+        # TODO: update
         if buying_price >= selling_price:
             raise ValueError('player {} can not {} at {} because buying price must be less than selling price. '
                              .format(player, buying_price, selling_price))

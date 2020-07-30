@@ -1,3 +1,4 @@
+from game.action.action import Action
 from game.figgie import Figgie
 
 
@@ -7,7 +8,7 @@ class Agent:
         self.wins = 0
         self.total_utility = 0
 
-    def get_action(self, figgie: Figgie) -> tuple:
+    def get_action(self, figgie: Figgie) -> Action:
         pass
 
     def reset(self) -> None:
