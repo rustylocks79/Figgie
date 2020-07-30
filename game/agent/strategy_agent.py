@@ -3,8 +3,8 @@ from random import choice
 
 import numpy as np
 
-from api.agent import Agent
-from api.game import Game
+from game.agent.agent import Agent
+from game.figgie import Figgie
 
 
 class GameNode:
@@ -74,21 +74,21 @@ class StrategyAgent(Agent):
         super().reset()
         self.unknown_states = 0
 
-    def generate_info_set(self, game: Game) -> str:
+    def generate_info_set(self, game: Figgie) -> str:
         pass
 
-    def generate_actions(self, game: Game) -> np.ndarray:
+    def generate_actions(self, game: Figgie) -> np.ndarray:
         return game.get_actions()
 
-    def resolve_action(self, game: Game, initial_action: int) -> int:
+    def resolve_action(self, game: Figgie, initial_action: int) -> int:
         return initial_action
 
-    def train(self, game: Game, trials: int):
+    def train(self, game: Figgie, trials: int):
         for i in range(trials):
             self.__train(game, 1.0, 1.0, i % 2)
             game.reset()
 
-    def __train(self, game: Game, pi: float, pi_prime: float, training_player: int) -> tuple:
+    def __train(self, game: Figgie, pi: float, pi_prime: float, training_player: int) -> tuple:
         player = game.get_active_player()
         actions = self.generate_actions(game)
 

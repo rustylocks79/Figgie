@@ -1,21 +1,43 @@
 import argparse
+import time
 
-from api.random_agent import RandomAgent
-from games.figgie import Figgie
-from main import play, BasicAgent
+from game.agent.one_action_agent import OneActionAgent
+from game.agent.strategy_agent import StrategyAgent
+from game.agent.basic_agent import BasicAgent
+from game.model.simple_model import SimpleModel
+from game.figgie import Figgie
+
+
+def play(game: Figgie, agents: list, games: int, verbose=False):
+    start_time = time.process_time()
+    game.play(agents, games, verbose=verbose)
+    total_time = time.process_time() - start_time
+    print('Testing took {} seconds'.format(total_time))
+
+    print('Results: ')
+    for i, agent in enumerate(agents):
+        print('agent {}: ({})'.format(i, type(agent)))
+        print('\twins: {}'.format(agent.wins))
+        print('\tavg. utility: {}, total utility: {}'.format(agent.total_utility / games, agent.total_utility))
+        if isinstance(agent, StrategyAgent):
+            print('\tavg unknown states: {}, unknown states: {}'.format(agent.unknown_states / games, agent.unknown_states))
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Testing a strategy')
+    parser = argparse.ArgumentParser(description='Train a strategy using CFR')
     parser.add_argument('-g', '--games', type=int, default=10_000, help='number of test games to run. ')
     args = parser.parse_args()
-    agent = BasicAgent()
-    agents = [RandomAgent(),
-              RandomAgent(),
-              RandomAgent(),
-              agent]
-    print('Testing Figgie')
-    play(Figgie(), agents, args.games, verbose=False)
+
+    game = Figgie()
+    print('Parameters: ')
+    print('\tgames: {}'.format(args.games))
+    print()
+
+    agents = [BasicAgent(0, SimpleModel()),
+              BasicAgent(1, SimpleModel()),
+              BasicAgent(2, SimpleModel()),
+              BasicAgent(3, SimpleModel())]
+    play(game, agents, args.games)
 
 
 if __name__ == '__main__':
