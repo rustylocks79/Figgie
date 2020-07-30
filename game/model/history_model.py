@@ -1,5 +1,5 @@
 from game.figgie import Suit, Figgie
-from game.model.price_model import PriceModel
+from game.model.utility_model import PriceModel
 
 
 class HistoryModel(PriceModel):

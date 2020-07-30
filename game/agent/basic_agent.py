@@ -1,21 +1,27 @@
 from game.agent.agent import Agent
 from game.figgie import Figgie, Suit
-from game.model.price_model import PriceModel
+from game.model.utility_model import UtilityModel
 
 
 class BasicAgent(Agent):
-    def __init__(self, index: int, model: PriceModel):
+    def __init__(self, index: int, model: UtilityModel):
         super().__init__(index)
-        self.priceModel = model
+        self.utilModel = model
 
     def get_action(self, figgie: Figgie) -> tuple:
-        expected_util = self.priceModel.get_expected_utility(Suit.CLUBS, figgie)
+        current_exp_util = self.utilModel.get_expected_utility(figgie, self.index)
         market = figgie.markets[Suit.CLUBS.value]
         hand = figgie.cards[self.index]
-        if market.can_buy(self.index)[0] and market.selling_price < expected_util:
-            return 'buy', Suit.CLUBS
-        elif market.can_sell(self.index)[0] and market.buying_price > expected_util:
-            return 'sell', Suit.CLUBS
+        if market.can_buy(self.index)[0]:
+            buy_exp_util = self.utilModel.get_expected_utility(figgie, self.index, ('buy', Suit.CLUBS))
+            if current_exp_util < buy_exp_util:
+                return 'buy', Suit.CLUBS
+        elif market.can_sell(self.index)[0]:
+            sell_exp_util = self.utilModel.get_expected_utility(figgie, self.index, ('sell', Suit.CLUBS))
+            if current_exp_util < sell_exp_util:
+                return 'sell', Suit.CLUBS
+
+        return ('pass',)
 
         if market.buying_price is None:
             return 'bid', Suit.CLUBS, round(expected_util) - 1
