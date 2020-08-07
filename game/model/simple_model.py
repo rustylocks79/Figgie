@@ -1,56 +1,47 @@
-import numpy as np
-
-from game.figgie import Figgie, SUITS
+from game.figgie import Figgie
 from game.model.utility_model import UtilityModel
+from game.suit import Suit
+
+PROBABILITY_8_CARD_GOAL_SUIT = .33
+PROBABILITY_10_CARD_GOAL_SUIT = .67
+CHANCE_TO_WIN = .5  # TODO: .5 is an arbitrary value
 
 
 class SimpleModel(UtilityModel):
 
-    def get_expected_utility_change(self, figgie: Figgie, index: int, action) -> float:
-        hand = figgie.cards[index].copy()
-
-        for suit in SUITS:
+    def get_utility_change_from_buy(self, figgie: Figgie, index: int, suit: Suit) -> float:
+        hand = figgie.cards[index]
+        if hand[suit.opposite().value] > 10:
+            return 10 + (self.get_expected_from_pot(hand[suit.value + 1]) - self.get_expected_from_pot(suit.value))
+        else:
             if hand[suit.value] > 10:
-                goal_suit = suit.opposite()
-                current_expected_util = 10 * hand[goal_suit.value] + self.get_expected_from_pot(hand[goal_suit.value])
-                if action is not None and action.suit == goal_suit:
-                    if action.operation == 'buy':
-                        hand[action.suit.value] += 1
-                    elif action.operation == 'sell':
-                        hand[action.suit.value] -= 1
-                    else:
-                        assert False, 'Invalid operation: {}'.format(str(action))
-                new_expected_util = 10 * hand[goal_suit.value] + self.get_expected_from_pot(hand[goal_suit.value])
-                return new_expected_util - current_expected_util
-
-        current_exp_util = SimpleModel.get_expected_util(hand, np.array([.25, .25, .25, .25], dtype=float))
-        if action is not None:
-            if action.operation == 'buy':
-                hand[action.suit.value] += 1
-            elif action.operation == 'sell':
-                hand[action.suit.value] -= 1
+                return 0
             else:
-                assert False, 'Invalid operation: {}'.format(str(action))
+                return .25 * (10 + (self.get_expected_from_pot(hand[suit.value + 1]) - self.get_expected_from_pot(suit.value)))
 
-        new_exp_util = SimpleModel.get_expected_util(hand, np.array([.25, .25, .25, .25], dtype=float))
-        return new_exp_util - current_exp_util
-
-    @staticmethod
-    def get_expected_util(hand: np.ndarray, probabilities: np.ndarray):
-        result = 0
-        for i, prob in enumerate(probabilities):
-            result += prob * (hand[i] * 10 + SimpleModel.get_expected_from_pot(hand[i]))
-        return result
+    def get_utility_change_from_sell(self, figgie: Figgie, index: int, suit: Suit) -> float:
+        hand = figgie.cards[index]
+        if hand[suit.opposite().value] > 10:
+            return -(10 + (self.get_expected_from_pot(hand[suit.value]) - self.get_expected_from_pot(suit.value - 1)))
+        else:
+            if hand[suit.value] > 10:
+                return 0
+            else:
+                return -(.25 * (10 + (self.get_expected_from_pot(hand[suit.value]) - self.get_expected_from_pot(suit.value - 1))))
 
     @staticmethod
     def get_expected_from_pot(cards: int):
+        """
+        :param cards: the number of cards the agent has of one suit
+        :return: the expected utility the agent will receive from the pot should this suit be the goal suit.
+        """
         if cards > 10:
             return 0
         elif cards > 8:
             return 100
-        if cards >= 6:
-            return .33 * 120 + .67 * 100
-        if cards >= 5:
-            return .33 * (60 + .5 * 60) + .67 * (50 + .5 * 50)  # TODO: .5 is an arbitrary value
+        elif cards >= 6:
+            return PROBABILITY_8_CARD_GOAL_SUIT * 120 + PROBABILITY_10_CARD_GOAL_SUIT * 100
+        elif cards == 5:
+            return PROBABILITY_8_CARD_GOAL_SUIT * 100 + PROBABILITY_10_CARD_GOAL_SUIT * (50 + CHANCE_TO_WIN * 50)
         else:
-            return .5 * (.33 * 120 + .67 * 100)  # TODO: .5 is an arbitrary value
+            return CHANCE_TO_WIN * (.33 * 120 + .67 * 100)

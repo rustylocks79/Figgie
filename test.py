@@ -1,9 +1,8 @@
 import argparse
+import pickle
 import time
 
-from game.agent.one_action_agent import OneActionAgent
-from game.agent.random_agent import RandomAgent
-from game.agent.regret_agent import StrategyAgent
+from game.agent.regret_agent import RegretAgent
 from game.agent.basic_agent import BasicAgent
 from game.model.history_model import HistoryModel
 from game.model.simple_model import SimpleModel
@@ -21,9 +20,13 @@ def play(game: Figgie, agents: list, games: int, verbose=False):
         print('agent {}: ({})'.format(i, type(agent)))
         print('\twins: {}'.format(agent.wins))
         print('\tavg. utility: {}, total utility: {}'.format(agent.total_utility / games, agent.total_utility))
-        if isinstance(agent, StrategyAgent):
+        if isinstance(agent, RegretAgent):
             print('\tavg unknown states: {}, unknown states: {}'.format(agent.unknown_states / games, agent.unknown_states))
 
+def load(file_name: str) -> dict:
+    with open(file_name, 'rb') as file:
+        strategy = pickle.load(file)
+    return strategy
 
 def main():
     parser = argparse.ArgumentParser(description='Train a strategy using CFR')
@@ -36,10 +39,11 @@ def main():
     print('\tgames: {}'.format(args.games))
     print()
 
+    game_tree = load('strategies/strategy_10000_basic.pickle')
     agents = [BasicAgent(0, SimpleModel()),
-              BasicAgent(1, SimpleModel()),
-              BasicAgent(2, HistoryModel()),
-              BasicAgent(3, HistoryModel())]
+              BasicAgent(1, HistoryModel()),
+              RegretAgent(2, SimpleModel(), game_tree=game_tree),
+              RegretAgent(3, HistoryModel(), game_tree=game_tree)]
 
     # agents = [RandomAgent(0),
     #           RandomAgent(1),

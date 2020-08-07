@@ -20,10 +20,8 @@ class BasicAgent(Agent):
     def get_action(self, figgie: Figgie) -> Action:
         market = figgie.markets[Suit.CLUBS.value]
 
-        buy_exp_util = self.util_model.get_expected_utility_change(figgie, self.index,
-                                                                   BuyAction(self.index, '', Suit.CLUBS))
-        sell_exp_util = self.util_model.get_expected_utility_change(figgie, self.index,
-                                                                    SellAction(self.index, '', Suit.CLUBS))
+        buy_exp_util = self.util_model.get_utility_change_from_buy(figgie, self.index, Suit.CLUBS)
+        sell_exp_util = self.util_model.get_utility_change_from_sell(figgie, self.index, Suit.CLUBS)
 
         if market.can_buy(self.index)[0]:
             if buy_exp_util > market.selling_price:
