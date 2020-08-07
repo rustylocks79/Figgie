@@ -23,6 +23,7 @@ class Figgie:
         self.__new_queue()
         self.active_player = self.queue.get()
         self.round = 0
+        self.history = []
 
     def reset(self) -> None:
         """
@@ -34,6 +35,7 @@ class Figgie:
         self.__new_queue()
         self.active_player = self.queue.get()
         self.round = 0
+        self.history.clear()
 
     def clear_markets(self) -> None:
         """
@@ -83,9 +85,11 @@ class Figgie:
         elif action.operation == 'bid':
             self.markets[action.suit.value].bid(self.active_player, action.buying_price)
         elif action.operation == 'buy':
+            action.seller = self.markets[action.suit.value].selling_player
             self.markets[action.suit.value].buy(self.active_player)
             self.clear_markets()
         elif action.operation == 'sell':
+            action.buyer = self.markets[action.suit.value].buying_player
             self.markets[action.suit.value].sell(self.active_player)
             self.clear_markets()
         elif action.operation == 'at':
@@ -94,6 +98,8 @@ class Figgie:
             pass
         else:
             raise ValueError('Unknown operation: {}'.format(action.operation))
+
+        self.history.append(action)
 
         if self.queue.empty():
             self.__new_queue()
@@ -204,8 +210,8 @@ class Market:
         if buying_price >= selling_price:
             raise ValueError('player {} can not {} at {} because buying price must be less than selling price. '
                              .format(player, buying_price, selling_price))
-        self.bid(buying_price, player)
-        self.ask(selling_price, player)
+        self.bid(player, buying_price)
+        self.ask(player, selling_price)
 
     def can_buy(self, player: int) -> tuple:
         chips = self.figgie.chips[player]

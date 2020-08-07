@@ -1,34 +1,46 @@
-from game.figgie import Suit, Figgie, SUITS
+import numpy as np
+
+from game.figgie import Figgie, SUITS
 from game.model.utility_model import UtilityModel
 
 
 class SimpleModel(UtilityModel):
-    def get_expected_utility(self, figgie: Figgie, index: int, action=None):
-        operation = None
-        action_suit = None
-        if action is not None:
-            operation = action[0]
-            action_suit = action[1]
+
+    def get_expected_utility_change(self, figgie: Figgie, index: int, action) -> float:
         hand = figgie.cards[index].copy()
-        expected_util = figgie.chips[index]
-        if action is not None:
-            market = figgie.markets[action_suit.value]
-            if operation == 'buy':
-                expected_util -= market.selling_price
-                hand[action_suit.value] += 1
-            elif operation == 'sell':
-                expected_util += market.buying_price
-                hand[action_suit.value] -= 1
-            else:
-                assert False, 'Invalid operation: {}'.format(operation)
 
         for suit in SUITS:
             if hand[suit.value] > 10:
-                return expected_util + 10 * hand[suit.value] + self.get_expected_from_pot(hand[suit.value])
+                goal_suit = suit.opposite()
+                current_expected_util = 10 * hand[goal_suit.value] + self.get_expected_from_pot(hand[goal_suit.value])
+                if action is not None and action.suit == goal_suit:
+                    if action.operation == 'buy':
+                        hand[action.suit.value] += 1
+                    elif action.operation == 'sell':
+                        hand[action.suit.value] -= 1
+                    else:
+                        assert False, 'Invalid operation: {}'.format(str(action))
+                new_expected_util = 10 * hand[goal_suit.value] + self.get_expected_from_pot(hand[goal_suit.value])
+                return new_expected_util - current_expected_util
 
-        for suit in SUITS:
-            expected_util += .25 * (hand[suit.value] * 10 + self.get_expected_from_pot(hand[suit.value]))
-        return expected_util
+        current_exp_util = SimpleModel.get_expected_util(hand, np.array([.25, .25, .25, .25], dtype=float))
+        if action is not None:
+            if action.operation == 'buy':
+                hand[action.suit.value] += 1
+            elif action.operation == 'sell':
+                hand[action.suit.value] -= 1
+            else:
+                assert False, 'Invalid operation: {}'.format(str(action))
+
+        new_exp_util = SimpleModel.get_expected_util(hand, np.array([.25, .25, .25, .25], dtype=float))
+        return new_exp_util - current_exp_util
+
+    @staticmethod
+    def get_expected_util(hand: np.ndarray, probabilities: np.ndarray):
+        result = 0
+        for i, prob in enumerate(probabilities):
+            result += prob * (hand[i] * 10 + SimpleModel.get_expected_from_pot(hand[i]))
+        return result
 
     @staticmethod
     def get_expected_from_pot(cards: int):

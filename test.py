@@ -3,8 +3,9 @@ import time
 
 from game.agent.one_action_agent import OneActionAgent
 from game.agent.random_agent import RandomAgent
-from game.agent.strategy_agent import StrategyAgent
+from game.agent.regret_agent import StrategyAgent
 from game.agent.basic_agent import BasicAgent
+from game.model.history_model import HistoryModel
 from game.model.simple_model import SimpleModel
 from game.figgie import Figgie
 
@@ -37,8 +38,8 @@ def main():
 
     agents = [BasicAgent(0, SimpleModel()),
               BasicAgent(1, SimpleModel()),
-              BasicAgent(2, SimpleModel()),
-              BasicAgent(3, SimpleModel())]
+              BasicAgent(2, HistoryModel()),
+              BasicAgent(3, HistoryModel())]
 
     # agents = [RandomAgent(0),
     #           RandomAgent(1),
