@@ -3,8 +3,8 @@ from game.suit import Suit
 
 
 class AskAction(Action):
-    def __init__(self, index: int, notes: str, suit: Suit, selling_price: int):
-        super().__init__(index, 'ask', notes)
+    def __init__(self, suit: Suit, selling_price: int, notes: str = ''):
+        super().__init__('ask', notes)
         self.suit = suit
         self.selling_price = selling_price
 

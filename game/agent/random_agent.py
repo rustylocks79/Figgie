@@ -37,18 +37,18 @@ class RandomAgent(Agent):
                 action_suit = suit
                 break
         if len(operations) == 0:
-            return PassAction(self.index, '')
+            return PassAction()
         operation = choice(operations)
         market = figgie.markets[action_suit.value]
         if operation == 'ask':
-            return AskAction(self.index, '', action_suit, randint(1, market.selling_price - 1 if market.selling_price is not None else MAX_PRICE))
+            return AskAction(action_suit, randint(1, market.selling_price - 1 if market.selling_price is not None else MAX_PRICE))
         elif operation == 'bid':
-            return BidAction(self.index, '', action_suit, randint(market.buying_price + 1 if market.buying_price is not None else 1, MAX_PRICE))
+            return BidAction(action_suit, randint(market.buying_price + 1 if market.buying_price is not None else 1, MAX_PRICE))
         elif operation == 'buy':
-            return BuyAction(self.index, '', action_suit)
+            return BuyAction(action_suit)
         elif operation == 'sell':
-            return SellAction(self.index, '', action_suit)
+            return SellAction(action_suit)
         elif operation == 'at':
             buying_price = randint(market.buying_price + 1 if market.buying_price is not None else 1, MAX_PRICE)
             selling_price = randint(1, market.selling_price - 1 if market.selling_price is not None else MAX_PRICE)
-            return AtAction(self.index, '', action_suit, buying_price, selling_price)
+            return AtAction(action_suit, buying_price, selling_price)

@@ -3,8 +3,8 @@ from game.suit import Suit
 
 
 class SellAction(Action):
-    def __init__(self, index: int, notes: str, suit: Suit):
-        super().__init__(index, 'sell', notes)
+    def __init__(self, suit: Suit, notes: str = ''):
+        super().__init__('sell', notes)
         self.suit = suit
         self.buyer = None
 

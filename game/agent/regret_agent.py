@@ -1,6 +1,4 @@
-import shelve
 from math import floor, ceil
-from random import choice
 
 import numpy as np
 
@@ -12,7 +10,7 @@ from game.action.buy_action import BuyAction
 from game.action.pass_action import PassAction
 from game.action.sell_action import SellAction
 from game.agent.agent import Agent
-from game.figgie import Figgie
+from game.figgie import Figgie, NUM_PLAYERS
 from game.suit import Suit
 
 
@@ -76,10 +74,10 @@ class RegretAgent(Agent):
         sell_exp_util = self.util_model.get_utility_change_from_sell(figgie, self.index, Suit.CLUBS)
         if market.can_buy(self.index)[0]:
             if buy_exp_util > market.selling_price:
-                return BuyAction(self.index, '', Suit.CLUBS)
+                return BuyAction(Suit.CLUBS)
         elif market.can_sell(self.index)[0]:
             if abs(sell_exp_util) < market.buying_price:
-                return SellAction(self.index, '', Suit.CLUBS)
+                return SellAction(Suit.CLUBS)
 
         # Create Info Set and actions
         will_buy = (market.buying_price is None or market.buying_price < buy_exp_util) and market.buying_player != self.index
@@ -91,29 +89,29 @@ class RegretAgent(Agent):
             info_set = 'bid exp: {}, market: {}'.format(round(buy_exp_util),
                                                         market.buying_price if market.buying_price is not None else 'N')
             if market.buying_price is None:
-                actions = [BidAction(self.index, '', Suit.CLUBS, 1),
-                           BidAction(self.index, '', Suit.CLUBS, 2),
-                           BidAction(self.index, '', Suit.CLUBS, 4),
-                           BidAction(self.index, '', Suit.CLUBS, 8)]
+                actions = [BidAction(Suit.CLUBS, 1),
+                           BidAction(Suit.CLUBS, 2),
+                           BidAction(Suit.CLUBS, 4),
+                           BidAction(Suit.CLUBS, 8)]
             else:
-                actions = [BidAction(self.index, '', Suit.CLUBS, market.buying_price + 1),
-                           BidAction(self.index, '', Suit.CLUBS, market.buying_price + 2),
-                           BidAction(self.index, '', Suit.CLUBS, market.buying_price + 4),
-                           BidAction(self.index, '', Suit.CLUBS, market.buying_price + 8)]
+                actions = [BidAction(Suit.CLUBS, market.buying_price + 1),
+                           BidAction(Suit.CLUBS, market.buying_price + 2),
+                           BidAction(Suit.CLUBS, market.buying_price + 4),
+                           BidAction(Suit.CLUBS, market.buying_price + 8)]
         elif will_sell:
             info_set = 'ask exp:{}, market {}'.format(round(sell_exp_util), market.selling_price if market.selling_price is not None else 'N')
             if market.selling_price is None:
-                actions = [AskAction(self.index, '', Suit.CLUBS, 1),
-                           AskAction(self.index, '', Suit.CLUBS, 2),
-                           AskAction(self.index, '', Suit.CLUBS, 4),
-                           AskAction(self.index, '', Suit.CLUBS, 8)]
+                actions = [AskAction(Suit.CLUBS, 1),
+                           AskAction(Suit.CLUBS, 2),
+                           AskAction(Suit.CLUBS, 4),
+                           AskAction(Suit.CLUBS, 8)]
             else:
                 actions = []
                 for i in [1, 2, 4, 8]:
                     if market.selling_price - i > 0:
-                        actions.append(AskAction(self.index, '', Suit.CLUBS, market.selling_price - i))
+                        actions.append(AskAction(Suit.CLUBS, market.selling_price - i))
         else:
-            return PassAction(self.index, '')
+            return PassAction()
 
         if info_set in self.game_tree:
             return np.random.choice(actions, p=self.game_tree[info_set].get_trained_strategy())
@@ -126,14 +124,14 @@ class RegretAgent(Agent):
 
             if will_buy and will_sell:
                 if buying_price >= selling_price:  # TODO: this is a temp fix
-                    return BidAction(self.index, '', Suit.CLUBS, buying_price)
-                return AtAction(self.index, '', Suit.CLUBS, buying_price, selling_price)
+                    return BidAction(Suit.CLUBS, buying_price)
+                return AtAction(Suit.CLUBS, buying_price, selling_price)
             elif will_buy:
-                return BidAction(self.index, '', Suit.CLUBS, buying_price)
+                return BidAction(Suit.CLUBS, buying_price)
             elif will_sell:
-                return AskAction(self.index, '', Suit.CLUBS, selling_price)
+                return AskAction(Suit.CLUBS, selling_price)
             else:
-                return PassAction(self.index, '')
+                return PassAction()
 
     def reset(self) -> None:
         super().reset()
@@ -141,7 +139,7 @@ class RegretAgent(Agent):
 
     def train(self, game: Figgie, trials: int):
         for i in range(trials):
-            self.__train(game, 1.0, 1.0, i % 2)
+            self.__train(game, 1.0, 1.0, i % NUM_PLAYERS)
             game.reset()
 
     def __train(self, figgie: Figgie, pi: float, pi_prime: float, training_player: int) -> tuple:
@@ -155,11 +153,11 @@ class RegretAgent(Agent):
         sell_exp_util = self.util_model.get_utility_change_from_sell(figgie, player, Suit.CLUBS)
         if market.can_buy(player)[0]:
             if buy_exp_util > market.selling_price:
-                figgie.preform(BuyAction(player, '', Suit.CLUBS))
+                figgie.preform(BuyAction(Suit.CLUBS))
                 return self.__train(figgie, pi, pi_prime, training_player)
         elif market.can_sell(player)[0]:
             if abs(sell_exp_util) < market.buying_price:
-                figgie.preform(SellAction(player, '', Suit.CLUBS))
+                figgie.preform(SellAction(Suit.CLUBS))
                 return self.__train(figgie, pi, pi_prime, training_player)
 
         # Create Info Set and actions
@@ -171,29 +169,29 @@ class RegretAgent(Agent):
         if will_buy:
             info_set = 'bid exp: {}, market: {}'.format(round(buy_exp_util), market.buying_price if market.buying_price is not None else 'N')
             if market.buying_price is None:
-                actions = [BidAction(player, '', Suit.CLUBS, 1),
-                           BidAction(player, '', Suit.CLUBS, 2),
-                           BidAction(player, '', Suit.CLUBS, 4),
-                           BidAction(player, '', Suit.CLUBS, 8)]
+                actions = [BidAction(Suit.CLUBS, 1),
+                           BidAction(Suit.CLUBS, 2),
+                           BidAction(Suit.CLUBS, 4),
+                           BidAction(Suit.CLUBS, 8)]
             else:
-                actions = [BidAction(player, '', Suit.CLUBS, market.buying_price + 1),
-                           BidAction(player, '', Suit.CLUBS, market.buying_price + 2),
-                           BidAction(player, '', Suit.CLUBS, market.buying_price + 4),
-                           BidAction(player, '', Suit.CLUBS, market.buying_price + 8)]
+                actions = [BidAction(Suit.CLUBS, market.buying_price + 1),
+                           BidAction(Suit.CLUBS, market.buying_price + 2),
+                           BidAction(Suit.CLUBS, market.buying_price + 4),
+                           BidAction(Suit.CLUBS, market.buying_price + 8)]
         elif will_sell:
             info_set = 'ask exp:{}, market {}'.format(round(sell_exp_util), market.selling_price if market.selling_price is not None else 'N')
             if market.selling_price is None:
-                actions = [AskAction(player, '', Suit.CLUBS, 1),
-                           AskAction(player, '', Suit.CLUBS, 2),
-                           AskAction(player, '', Suit.CLUBS, 4),
-                           AskAction(player, '', Suit.CLUBS, 8)]
+                actions = [AskAction(Suit.CLUBS, 1),
+                           AskAction(Suit.CLUBS, 2),
+                           AskAction(Suit.CLUBS, 4),
+                           AskAction(Suit.CLUBS, 8)]
             else:
                 actions = []
                 for i in [1, 2, 4, 8]:
                     if market.selling_price - i > 0:
-                        actions.append(AskAction(player, '', Suit.CLUBS, market.selling_price - i))
+                        actions.append(AskAction(Suit.CLUBS, market.selling_price - i))
         else:
-            figgie.preform(PassAction(player, ''))
+            figgie.preform(PassAction())
             return self.__train(figgie, pi, pi_prime, training_player)
 
         if info_set in self.game_tree:

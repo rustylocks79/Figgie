@@ -68,17 +68,12 @@ class Figgie:
                 suit = deck.pop()
                 self.cards[i][suit.value] += 1
 
-    def get_active_player(self) -> int:
-        """
-        :return: the active player in the games current state.
-        """
-        return self.active_player
-
     def preform(self, action) -> None:
         """
         :param action: the string action to be preformed
         :return: change the state of the game by preforming the provided action.
         """
+        action.index = self.active_player
 
         if action.operation == 'ask':
             self.markets[action.suit.value].ask(self.active_player, action.selling_price)
@@ -136,7 +131,7 @@ class Figgie:
     def play(self, agents: list, trials: int, verbose=False):
         for i in range(trials):
             while not self.is_finished():
-                player = self.get_active_player()
+                player = self.active_player
                 action = agents[player].get_action(self)
                 if verbose:
                     print(str(action))

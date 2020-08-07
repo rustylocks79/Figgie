@@ -25,10 +25,10 @@ class BasicAgent(Agent):
 
         if market.can_buy(self.index)[0]:
             if buy_exp_util > market.selling_price:
-                return BuyAction(self.index, '', Suit.CLUBS)
+                return BuyAction(Suit.CLUBS)
         elif market.can_sell(self.index)[0]:
             if abs(sell_exp_util) < market.buying_price:
-                return SellAction(self.index, '', Suit.CLUBS)
+                return SellAction(Suit.CLUBS)
 
         buying_price = max(floor(buy_exp_util) - 1, 1)
         selling_price = max(abs(ceil(sell_exp_util)) + 1, 1)
@@ -38,11 +38,11 @@ class BasicAgent(Agent):
 
         if will_buy and will_sell:
             if buying_price >= selling_price:  # TODO: this is a temp fix
-                return BidAction(self.index, '', Suit.CLUBS, buying_price)
-            return AtAction(self.index, '', Suit.CLUBS, buying_price, selling_price)
+                return BidAction(Suit.CLUBS, buying_price)
+            return AtAction(Suit.CLUBS, buying_price, selling_price)
         elif will_buy:
-            return BidAction(self.index, '', Suit.CLUBS, buying_price)
+            return BidAction(Suit.CLUBS, buying_price)
         elif will_sell:
-            return AskAction(self.index, '', Suit.CLUBS, selling_price)
+            return AskAction(Suit.CLUBS, selling_price)
         else:
-            return PassAction(self.index, '')
+            return PassAction()
