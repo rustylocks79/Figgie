@@ -129,6 +129,12 @@ class Figgie:
         return utility
 
     def play(self, agents: list, trials: int, verbose=False):
+        """
+        Plays 'trials' number of games and records the results in the agent statistics
+        :param agents: a list of agents (size must be 4)
+        :param trials: the number of games to preform
+        :param verbose: if true output each agent action to the console
+        """
         for i in range(trials):
             while not self.is_finished():
                 player = self.active_player
@@ -200,11 +206,21 @@ class Market:
         self.buying_price = amount
         self.buying_player = player
 
-    def at(self, player: int, buying_price: int, selling_price: int) -> None:
-        # TODO: update
+    def can_at(self, player: int, buying_price: int, selling_price: int) -> tuple:
+        can, reason = self.can_bid(player, buying_price)
+        if not can:
+            return can, reason
+        can, reason = self.can_ask(player, selling_price)
+        if not can:
+            return can, reason
         if buying_price >= selling_price:
-            raise ValueError('player {} can not {} at {} because buying price must be less than selling price. '
-                             .format(player, buying_price, selling_price))
+            return False, 'buying price must be less than selling price.'
+        return True, 'success'
+
+    def at(self, player: int, buying_price: int, selling_price: int) -> None:
+        can, reason = self.can_at(player, buying_price, selling_price)
+        if not can:
+            raise ValueError('player {} can not {} at {} because {}'.format(player, buying_price, selling_price, reason))
         self.bid(player, buying_price)
         self.ask(player, selling_price)
 
@@ -252,6 +268,12 @@ class Market:
 
         self.figgie.chips[self.buying_player] -= self.buying_price
         self.figgie.cards[self.buying_player][self.suit.value] += 1
+
+    def is_buyer(self) -> bool:
+        return self.buying_price is not None
+
+    def is_seller(self) -> bool:
+        return self.selling_price is not None
 
     def clear(self):
         self.buying_price = None

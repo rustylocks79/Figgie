@@ -3,7 +3,7 @@ import pickle
 import time
 
 from game.agent.regret_agent import RegretAgent
-from game.agent.basic_agent import BasicAgent
+from game.agent.basic_agent import BasicAgent, MinusOneAgent, PlusOneAgent
 from game.model.history_model import HistoryModel
 from game.model.simple_model import SimpleModel
 from game.figgie import Figgie
@@ -39,16 +39,12 @@ def main():
     print('\tgames: {}'.format(args.games))
     print()
 
-    game_tree = load('strategies/strategy_10000_basic.pickle')
-    agents = [BasicAgent(0, SimpleModel()),
-              BasicAgent(1, HistoryModel()),
-              RegretAgent(2, SimpleModel(), game_tree=game_tree),
-              RegretAgent(3, HistoryModel(), game_tree=game_tree)]
+    # game_tree = load('strategies/strategy_10000_basic.pickle')
+    agents = [MinusOneAgent(SimpleModel()),
+              MinusOneAgent(HistoryModel()),
+              PlusOneAgent(SimpleModel()),
+              PlusOneAgent(HistoryModel())]
 
-    # agents = [RandomAgent(0),
-    #           RandomAgent(1),
-    #           RandomAgent(2),
-    #           RandomAgent(3)]
     play(game, agents, args.games, args.verbose)
 
 

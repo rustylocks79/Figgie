@@ -10,7 +10,8 @@ from game.action.buy_action import BuyAction
 from game.action.pass_action import PassAction
 from game.action.sell_action import SellAction
 from game.agent.agent import Agent
-from game.figgie import Figgie, NUM_PLAYERS
+from game.agent.basic_agent import PlusOneAgent
+from game.figgie import Figgie, NUM_PLAYERS, Market
 from game.suit import Suit
 
 
@@ -60,78 +61,66 @@ class GameNode:
 
 
 class RegretAgent(Agent):
-    def __init__(self, index: int, util_model, game_tree=None):
-        super().__init__(index)
+    def __init__(self, util_model, game_tree=None):
+        super().__init__()
         if game_tree is None:
             game_tree = {}
         self.game_tree = game_tree
         self.unknown_states = 0
         self.util_model = util_model
+        self.default_agent = PlusOneAgent(util_model)
 
-    def get_action(self, figgie) -> Action:
+    def get_configuration(self, figgie: Figgie):
+        player = figgie.active_player
         market = figgie.markets[Suit.CLUBS.value]
-        buy_exp_util = self.util_model.get_utility_change_from_buy(figgie, self.index, Suit.CLUBS)
-        sell_exp_util = self.util_model.get_utility_change_from_sell(figgie, self.index, Suit.CLUBS)
-        if market.can_buy(self.index)[0]:
+        buy_exp_util = self.util_model.get_utility_change_from_buy(figgie, player, Suit.CLUBS)
+        sell_exp_util = self.util_model.get_utility_change_from_sell(figgie, player, Suit.CLUBS)
+        if market.can_buy(player)[0]:
             if buy_exp_util > market.selling_price:
-                return BuyAction(Suit.CLUBS)
-        elif market.can_sell(self.index)[0]:
+                return None, BuyAction(Suit.CLUBS), buy_exp_util, sell_exp_util
+        elif market.can_sell(player)[0]:
             if abs(sell_exp_util) < market.buying_price:
-                return SellAction(Suit.CLUBS)
+                return None, SellAction(Suit.CLUBS), buy_exp_util, sell_exp_util
 
-        # Create Info Set and actions
-        will_buy = (market.buying_price is None or market.buying_price < buy_exp_util) and market.buying_player != self.index
-        will_sell = (market.selling_price is None or market.selling_price > sell_exp_util) and market.selling_player != self.index and \
-                    figgie.cards[self.index][Suit.CLUBS.value] > 0
-        # if will_buy and will_sell:
-        #     info_set = 'at {} {}'.format(round(buy_exp_util), round(sell_exp_util))
-        if will_buy:
+        will_bid = (not market.is_buyer() or floor(buy_exp_util) > market.buying_price) and market.buying_player != player
+        will_ask = (not market.is_seller() or ceil(abs(sell_exp_util)) < market.selling_price) and market.selling_player != player and \
+                    figgie.cards[player][Suit.CLUBS.value] > 0
+        will_at = will_bid and will_ask and (not market.is_buyer() or not market.is_seller() or market.buying_price < market.selling_price)
+        if will_at:
+            info_set = 'at exp: {}, market: {}, exp: {}, market: {}'.format(round(buy_exp_util), market.buying_price, round(sell_exp_util), market.selling_price)
+            actions = []
+            min_buy = market.buying_price + 1 if market.buying_price is not None else 1
+            max_sell = market.selling_price - 1 if market.selling_price is not None else 8
+            for i in range(min_buy, min_buy + 8, 2):
+                for j in range(max_sell, max(max_sell - 8, i), -2):
+                    actions.append(AtAction(Suit.CLUBS, i, j))
+        elif will_bid:
             info_set = 'bid exp: {}, market: {}'.format(round(buy_exp_util),
-                                                        market.buying_price if market.buying_price is not None else 'N')
-            if market.buying_price is None:
-                actions = [BidAction(Suit.CLUBS, 1),
-                           BidAction(Suit.CLUBS, 2),
-                           BidAction(Suit.CLUBS, 4),
-                           BidAction(Suit.CLUBS, 8)]
-            else:
-                actions = [BidAction(Suit.CLUBS, market.buying_price + 1),
-                           BidAction(Suit.CLUBS, market.buying_price + 2),
-                           BidAction(Suit.CLUBS, market.buying_price + 4),
-                           BidAction(Suit.CLUBS, market.buying_price + 8)]
-        elif will_sell:
-            info_set = 'ask exp:{}, market {}'.format(round(sell_exp_util), market.selling_price if market.selling_price is not None else 'N')
-            if market.selling_price is None:
-                actions = [AskAction(Suit.CLUBS, 1),
-                           AskAction(Suit.CLUBS, 2),
-                           AskAction(Suit.CLUBS, 4),
-                           AskAction(Suit.CLUBS, 8)]
-            else:
-                actions = []
-                for i in [1, 2, 4, 8]:
-                    if market.selling_price - i > 0:
-                        actions.append(AskAction(Suit.CLUBS, market.selling_price - i))
+                                                        market.buying_price if market.is_buyer() else 'N')
+            actions = []
+            min_buy = market.buying_price + 1 if market.buying_price is not None else 1
+            for i in range(min_buy, min_buy + 8, 2):
+                actions.append(BidAction(Suit.CLUBS, i))
+        elif will_ask:
+            info_set = 'ask exp:{}, market {}'.format(round(sell_exp_util),
+                                                      market.selling_price if market.is_seller() else 'N')
+            actions = []
+            max_sell = market.selling_price - 1 if market.selling_price is not None else 8
+            for i in range(max_sell, max(max_sell - 8, 1), -2):
+                actions.append(AskAction(Suit.CLUBS, i))
         else:
-            return PassAction()
+            return None, PassAction(), buy_exp_util, sell_exp_util
+        return info_set, actions, buy_exp_util, sell_exp_util
 
-        if info_set in self.game_tree:
+    def get_action(self, figgie, training_mode: bool = False) -> Action:
+        info_set, actions, buy_exp_util, sell_exp_util = self.get_configuration(figgie)
+        if info_set is None:  # Action chosen by market
+            return actions
+        elif info_set in self.game_tree:
             return np.random.choice(actions, p=self.game_tree[info_set].get_trained_strategy())
         else:
-            buying_price = max(floor(buy_exp_util) - 1, 1)
-            selling_price = max(abs(ceil(sell_exp_util)) + 1, 1)
-
-            will_buy = market.can_bid(self.index, buying_price)[0]
-            will_sell = market.can_ask(self.index, selling_price)[0]
-
-            if will_buy and will_sell:
-                if buying_price >= selling_price:  # TODO: this is a temp fix
-                    return BidAction(Suit.CLUBS, buying_price)
-                return AtAction(Suit.CLUBS, buying_price, selling_price)
-            elif will_buy:
-                return BidAction(Suit.CLUBS, buying_price)
-            elif will_sell:
-                return AskAction(Suit.CLUBS, selling_price)
-            else:
-                return PassAction()
+            self.unknown_states += 1
+            return self.default_agent.get_action(figgie)
 
     def reset(self) -> None:
         super().reset()
@@ -143,58 +132,16 @@ class RegretAgent(Agent):
             game.reset()
 
     def __train(self, figgie: Figgie, pi: float, pi_prime: float, training_player: int) -> tuple:
-        player = figgie.get_active_player()
+        player = figgie.active_player
         if figgie.is_finished():
             utility = figgie.get_utility()
             return utility[player] / pi_prime, 1.0
 
-        market = figgie.markets[Suit.CLUBS.value]
-        buy_exp_util = self.util_model.get_utility_change_from_buy(figgie, player, Suit.CLUBS)
-        sell_exp_util = self.util_model.get_utility_change_from_sell(figgie, player, Suit.CLUBS)
-        if market.can_buy(player)[0]:
-            if buy_exp_util > market.selling_price:
-                figgie.preform(BuyAction(Suit.CLUBS))
-                return self.__train(figgie, pi, pi_prime, training_player)
-        elif market.can_sell(player)[0]:
-            if abs(sell_exp_util) < market.buying_price:
-                figgie.preform(SellAction(Suit.CLUBS))
-                return self.__train(figgie, pi, pi_prime, training_player)
-
-        # Create Info Set and actions
-        will_buy = (market.buying_price is None or market.buying_price < buy_exp_util) and market.buying_player != player
-        will_sell = (market.selling_price is None or market.selling_price > sell_exp_util) and market.selling_player != player and \
-                    figgie.cards[player][Suit.CLUBS.value] > 0
-        # if will_buy and will_sell:
-        #     info_set = 'at {} {}'.format(round(buy_exp_util), round(sell_exp_util))
-        if will_buy:
-            info_set = 'bid exp: {}, market: {}'.format(round(buy_exp_util), market.buying_price if market.buying_price is not None else 'N')
-            if market.buying_price is None:
-                actions = [BidAction(Suit.CLUBS, 1),
-                           BidAction(Suit.CLUBS, 2),
-                           BidAction(Suit.CLUBS, 4),
-                           BidAction(Suit.CLUBS, 8)]
-            else:
-                actions = [BidAction(Suit.CLUBS, market.buying_price + 1),
-                           BidAction(Suit.CLUBS, market.buying_price + 2),
-                           BidAction(Suit.CLUBS, market.buying_price + 4),
-                           BidAction(Suit.CLUBS, market.buying_price + 8)]
-        elif will_sell:
-            info_set = 'ask exp:{}, market {}'.format(round(sell_exp_util), market.selling_price if market.selling_price is not None else 'N')
-            if market.selling_price is None:
-                actions = [AskAction(Suit.CLUBS, 1),
-                           AskAction(Suit.CLUBS, 2),
-                           AskAction(Suit.CLUBS, 4),
-                           AskAction(Suit.CLUBS, 8)]
-            else:
-                actions = []
-                for i in [1, 2, 4, 8]:
-                    if market.selling_price - i > 0:
-                        actions.append(AskAction(Suit.CLUBS, market.selling_price - i))
-        else:
-            figgie.preform(PassAction())
+        info_set, actions, _, _ = self.get_configuration(figgie)
+        if info_set is None:
+            figgie.preform(actions)
             return self.__train(figgie, pi, pi_prime, training_player)
-
-        if info_set in self.game_tree:
+        elif info_set in self.game_tree:
             node = self.game_tree[info_set]
         else:
             node = GameNode(len(actions))

@@ -3,11 +3,7 @@ from game.figgie import Figgie
 
 
 class Agent:
-    def __init__(self, index: int):
-        """
-        :param index: the number assigned to this agent.
-        """
-        self.index = index
+    def __init__(self):
         self.wins = 0
         self.total_utility = 0
 

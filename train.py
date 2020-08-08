@@ -22,8 +22,7 @@ def main():
     parser.add_argument('-g', '--games', type=int, default=10_000, help='number of test games to run. ')
     args = parser.parse_args()
 
-    game = Figgie()
-    agent = RegretAgent(0, SimpleModel())
+    agent = RegretAgent(SimpleModel())
     print('Parameters: ')
     print('\titerations: {}'.format(args.iterations))
     print('\ttrials: {}'.format(args.trials))
@@ -34,7 +33,7 @@ def main():
         print('Iteration: {}'.format(i))
 
         start_time = time.process_time()
-        agent.train(game, args.trials)
+        agent.train(figgie, args.trials)
         total_time = time.process_time() - start_time
         print('\tTraining took {} seconds '.format(total_time))
 
