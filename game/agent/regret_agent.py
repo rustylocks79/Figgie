@@ -99,7 +99,7 @@ class RegretAgent(Agent):
                                                   hand[Suit.CLUBS.value], self.transactions[Suit.CLUBS.value])
             actions = []
             min_buy = market.buying_price + 1 if market.is_buyer() else 1
-            max_sell = market.selling_price if market.is_seller() else 12
+            max_sell = market.selling_price if market.is_seller() else card_util + 8
             for i in range(min_buy, min_buy + 8):
                 for j in range(max(max_sell - 8, i + 1), max_sell):
                     actions.append(AtAction(Suit.CLUBS, i, j))
