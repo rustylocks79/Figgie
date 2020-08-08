@@ -24,7 +24,7 @@ class Agent:
         """
         pass
 
-    def on_action(self, figgie: Figgie, action: Action) -> None:
+    def on_action(self, figgie: Figgie, index: int, action: Action) -> None:
         pass
 
     def reset(self) -> None:

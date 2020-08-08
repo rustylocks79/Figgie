@@ -60,6 +60,9 @@ class BasicAgent(Agent):
         else:
             return PassAction()
 
+    def on_action(self, figgie: Figgie, index: int, action: Action) -> None:
+        self.util_model.on_action(figgie, index, action)
+
     def get_buying_price(self, figgie: Figgie, card_util: int) -> int:
         pass
 

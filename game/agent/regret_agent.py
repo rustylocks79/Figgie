@@ -12,6 +12,7 @@ from game.action.sell_action import SellAction
 from game.agent.agent import Agent
 from game.agent.basic_agent import PlusOneAgent
 from game.figgie import Figgie, NUM_PLAYERS, Market
+from game.model.simple_model import SimpleModel
 from game.suit import Suit
 
 
@@ -61,17 +62,19 @@ class GameNode:
 
 
 class RegretAgent(Agent):
-    def __init__(self, util_model, game_tree=None):
+    def __init__(self, util_model, default_agent: Agent, game_tree: dict = None):
         super().__init__()
         if game_tree is None:
             game_tree = {}
         self.game_tree = game_tree
         self.unknown_states = 0
         self.util_model = util_model
-        self.default_agent = PlusOneAgent(util_model)
+        self.default_agent = default_agent
+        self.transactions = np.full(4, 0, dtype=int)
 
     def get_configuration(self, figgie: Figgie):
         player = figgie.active_player
+        hand = figgie.cards[player]
         market = figgie.markets[Suit.CLUBS.value]
         card_util = round(self.util_model.get_card_utility(figgie, player, Suit.CLUBS))
         actual_util = round(self.cheating_model.get_card_utility(figgie, player, Suit.CLUBS))
@@ -90,24 +93,27 @@ class RegretAgent(Agent):
                     figgie.cards[player][Suit.CLUBS.value] > 0
         will_at = will_bid and will_ask and (not market.is_buyer() or not market.is_seller() or market.buying_price + 1 < card_util < market.selling_price - 1)
         if will_at:
-            info_set = 'at util: {}, market: {}, market: {}'.format(card_util, market.buying_price, market.selling_price)
+            info_set = 'at,{},{},{},{},{}'.format(card_util,
+                                                  market.buying_price if market.is_buyer() else 'N',
+                                                  market.selling_price if market.is_seller() else 'N',
+                                                  hand[Suit.CLUBS.value], self.transactions[Suit.CLUBS.value])
             actions = []
             min_buy = market.buying_price + 1 if market.is_buyer() else 1
             max_sell = market.selling_price - 1 if market.is_seller() else 12
-            for i in range(min_buy, min_buy + 8, 1):
+            for i in range(min_buy, min_buy + 8):
                 for j in range(max_sell, max(max_sell - 8, i), -1):
                     actions.append(AtAction(Suit.CLUBS, i, j))
         elif will_bid:
-            info_set = 'bid util: {}, market: {}'.format(card_util, market.buying_price if market.is_buyer() else 'N')
+            info_set = 'bid,{},{},{},{}'.format(card_util, market.buying_price if market.is_buyer() else 'N', hand[Suit.CLUBS.value], self.transactions[Suit.CLUBS.value])
             actions = []
             min_buy = market.buying_price + 1 if market.buying_price is not None else 1
-            for i in range(min_buy, min_buy + 8, 2):
+            for i in range(min_buy, min_buy + 8):
                 actions.append(BidAction(Suit.CLUBS, i))
         elif will_ask:
-            info_set = 'ask util: {}, market {}'.format(card_util, market.selling_price if market.is_seller() else 'N')
+            info_set = 'ask,{},{},{},{}'.format(card_util, market.selling_price if market.is_seller() else 'N', hand[Suit.CLUBS.value], self.transactions[Suit.CLUBS.value])
             actions = []
             max_sell = market.selling_price - 1 if market.selling_price is not None else 8
-            for i in range(max_sell, max(max_sell - 8, 1), -2):
+            for i in range(max_sell, max(max_sell - 8, 1), -1):
                 actions.append(AskAction(Suit.CLUBS, i))
         else:
             return None, PassAction()
@@ -125,9 +131,14 @@ class RegretAgent(Agent):
             self.unknown_states += 1
             return self.default_agent.get_action(figgie)
 
+    def on_action(self, figgie: Figgie, index: int, action: Action) -> None:
+        if not isinstance(action, PassAction):
+            self.transactions[action.suit.value] += 1
+
     def reset(self) -> None:
         super().reset()
         self.unknown_states = 0
+        self.transactions = np.full(4, 0, dtype=int)
 
     def train(self, game: Figgie, trials: int):
         for i in range(trials):

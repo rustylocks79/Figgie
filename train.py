@@ -2,6 +2,7 @@ import argparse
 import pickle
 import time
 
+from game.agent.basic_agent import PlusOneAgent
 from game.agent.regret_agent import RegretAgent
 from game.figgie import Figgie
 from game.model.simple_model import SimpleModel
@@ -21,7 +22,7 @@ def main():
     parser.add_argument('-i', '--iterations', type=int, default=1, help='the number of times to train and run')
     args = parser.parse_args()
 
-    agent = RegretAgent(SimpleModel())
+    agent = RegretAgent(SimpleModel(), PlusOneAgent(SimpleModel()))
     print('Parameters: ')
     print('\titerations: {}'.format(args.iterations))
     print('\ttrials: {}'.format(args.trials))

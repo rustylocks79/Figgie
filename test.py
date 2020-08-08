@@ -38,18 +38,18 @@ def main():
     parser.add_argument('-v', '--verbose', type=bool, default=False, help='output actions')
     args = parser.parse_args()
 
-    game = Figgie()
+    figgie = Figgie()
     print('Parameters: ')
     print('\tgames: {}'.format(args.games))
     print()
 
-    game_tree = load('strategies/strategy_100000_basic.pickle')
+    game_tree = load('strategies/strategy_10000_basic.pickle')
     agents = [MinusOneAgent(SimpleModel()),
               PlusOneAgent(SimpleModel()),
               PlusOneAgent(HistoryModel()),
-              RegretAgent(SimpleModel(), game_tree=game_tree)]
+              RegretAgent(SimpleModel(), PlusOneAgent(SimpleModel()), game_tree=game_tree)]
 
-    play(game, agents, args.games, args.verbose)
+    play(figgie, agents, args.games, args.verbose)
 
 
 if __name__ == '__main__':
