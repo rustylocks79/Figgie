@@ -4,6 +4,7 @@ import time
 
 from game.agent.regret_agent import RegretAgent
 from game.agent.basic_agent import BasicAgent, MinusOneAgent, PlusOneAgent
+from game.model.cheating_model import CheatingModel
 from game.model.history_model import HistoryModel
 from game.model.simple_model import SimpleModel
 from game.figgie import Figgie
@@ -20,13 +21,16 @@ def play(game: Figgie, agents: list, games: int, verbose=False):
         print('agent {}: ({})'.format(i, type(agent)))
         print('\twins: {}'.format(agent.wins))
         print('\tavg. utility: {}, total utility: {}'.format(agent.total_utility / games, agent.total_utility))
+        print('\tr^2 of model: {}'.format(agent.get_r_squared()))
         if isinstance(agent, RegretAgent):
             print('\tavg unknown states: {}, unknown states: {}'.format(agent.unknown_states / games, agent.unknown_states))
+
 
 def load(file_name: str) -> dict:
     with open(file_name, 'rb') as file:
         strategy = pickle.load(file)
     return strategy
+
 
 def main():
     parser = argparse.ArgumentParser(description='Train a strategy using CFR')
@@ -42,7 +46,7 @@ def main():
     game_tree = load('strategies/strategy_100000_basic.pickle')
     agents = [MinusOneAgent(SimpleModel()),
               PlusOneAgent(SimpleModel()),
-              PlusOneAgent(SimpleModel()),
+              PlusOneAgent(HistoryModel()),
               RegretAgent(SimpleModel(), game_tree=game_tree)]
 
     play(game, agents, args.games, args.verbose)

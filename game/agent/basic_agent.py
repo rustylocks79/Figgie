@@ -22,6 +22,8 @@ class BasicAgent(Agent):
         market = figgie.markets[Suit.CLUBS.value]
 
         card_util = round(self.util_model.get_card_utility(figgie, player, Suit.CLUBS))
+        actual_util = round(self.cheating_model.get_card_utility(figgie, player, Suit.CLUBS))
+        self.add_prediction(card_util, actual_util)
 
         if market.can_buy(player)[0]:
             # if the utility gained by buying the card is greater than the cost of the card.

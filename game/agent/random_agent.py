@@ -14,24 +14,25 @@ MAX_PRICE = 30  # TODO: come up with formula
 
 
 class RandomAgent(Agent):
-    def __init__(self, index: int):
-        super().__init__(index)
+    def __init__(self):
+        super().__init__()
 
     def get_action(self, figgie: Figgie) -> Action:
+        player = figgie.active_player
         operations = []
         suits = [Suit.CLUBS, Suit.DIAMONDS, Suit.HEARTS, Suit.SPADES]
         shuffle(suits)
         action_suit = None
         for suit in suits:
             market = figgie.markets[suit.value]
-            hand = figgie.cards[self.index]
+            hand = figgie.cards[player]
             if (market.selling_price is None or market.selling_price > 1) and hand[suit.value] >= 1:
                 operations.append('ask')
             if market.buying_price is None or market.buying_price < MAX_PRICE:
                 operations.append('bid')
-            if market.can_buy(self.index)[0]:
+            if market.can_buy(player)[0]:
                 operations.append('buy')
-            if market.can_sell(self.index)[0]:
+            if market.can_sell(player)[0]:
                 operations.append('sell')
             if len(operations) > 0:
                 action_suit = suit
