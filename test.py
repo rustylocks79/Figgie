@@ -39,11 +39,11 @@ def main():
     print('\tgames: {}'.format(args.games))
     print()
 
-    # game_tree = load('strategies/strategy_10000_basic.pickle')
+    game_tree = load('strategies/strategy_100000_basic.pickle')
     agents = [MinusOneAgent(SimpleModel()),
-              MinusOneAgent(HistoryModel()),
               PlusOneAgent(SimpleModel()),
-              PlusOneAgent(HistoryModel())]
+              PlusOneAgent(SimpleModel()),
+              RegretAgent(SimpleModel(), game_tree=game_tree)]
 
     play(game, agents, args.games, args.verbose)
 

@@ -21,16 +21,15 @@ class BasicAgent(Agent):
         player = figgie.active_player
         market = figgie.markets[Suit.CLUBS.value]
 
-        buy_exp_util = self.util_model.get_utility_change_from_buy(figgie, player, Suit.CLUBS)
-        sell_exp_util = self.util_model.get_utility_change_from_sell(figgie, player, Suit.CLUBS)
+        card_util = round(self.util_model.get_card_utility(figgie, player, Suit.CLUBS))
 
         if market.can_buy(player)[0]:
             # if the utility gained by buying the card is greater than the cost of the card.
-            if buy_exp_util > market.selling_price:
+            if card_util > market.selling_price:
                 return BuyAction(Suit.CLUBS)
         elif market.can_sell(player)[0]:
             # if the utility lost by selling the card is less than the value received for selling the card.
-            if abs(sell_exp_util) < market.buying_price:
+            if card_util < market.buying_price:
                 return SellAction(Suit.CLUBS)
 
         will_bid = False
@@ -39,13 +38,13 @@ class BasicAgent(Agent):
         selling_price = 0
 
         # if the expected utility for buying the card is buying price (Can offer a bigger buy).
-        if not market.is_buyer() or floor(buy_exp_util) > market.buying_price:
-            buying_price = self.get_buying_price(figgie, buy_exp_util)
+        if not market.is_buyer() or card_util > market.buying_price + 1:
+            buying_price = self.get_buying_price(figgie, card_util)
             will_bid = market.can_bid(player, buying_price)[0]
 
         # if the expected utility lost for selling the card is less than the selling price (Can offer a lower sell)
-        if not market.is_seller() or ceil(abs(sell_exp_util)) < market.selling_price:
-            selling_price = self.get_selling_price(figgie, sell_exp_util)
+        if not market.is_seller() or card_util < market.selling_price - 1:
+            selling_price = self.get_selling_price(figgie, card_util)
             will_ask = market.can_ask(player, selling_price)[0]
 
         will_at = will_bid and will_ask and buying_price < selling_price
@@ -59,32 +58,32 @@ class BasicAgent(Agent):
         else:
             return PassAction()
 
-    def get_buying_price(self, figgie: Figgie, buy_exp_util: float) -> int:
+    def get_buying_price(self, figgie: Figgie, card_util: int) -> int:
         pass
 
-    def get_selling_price(self, figgie: Figgie, sell_exp_util: float) -> int:
+    def get_selling_price(self, figgie: Figgie, card_util: int) -> int:
         pass
 
 
 class PlusOneAgent(BasicAgent):
-    def get_buying_price(self, figgie: Figgie, buy_exp_util: float) -> int:
-        return max(floor(buy_exp_util) - 1, 1)
+    def get_buying_price(self, figgie: Figgie, card_util: int) -> int:
+        return max(card_util - 1, 1)
 
-    def get_selling_price(self, figgie: Figgie, sell_exp_util: float) -> int:
-        return int(max(abs(ceil(sell_exp_util)) + 1, 1))
+    def get_selling_price(self, figgie: Figgie, card_util: int) -> int:
+        return max(card_util + 1, 1)
 
 
 class MinusOneAgent(BasicAgent):
-    def get_buying_price(self, figgie: Figgie, buy_exp_util: float) -> int:
+    def get_buying_price(self, figgie: Figgie, card_util: int) -> int:
         market = figgie.markets[Suit.CLUBS.value]
         if market.is_buyer():
             return market.buying_price + 1
         else:
-            return max(floor(buy_exp_util) - 1, 1)
+            return max(card_util - 1, 1)
 
-    def get_selling_price(self, figgie: Figgie, sell_exp_util: float) -> int:
+    def get_selling_price(self, figgie: Figgie, card_util: int) -> int:
         market = figgie.markets[Suit.CLUBS.value]
         if market.is_seller():
             return market.selling_price - 1
         else:
-            return int(max(abs(ceil(sell_exp_util)) + 1, 1))
+            return max(card_util + 1, 1)

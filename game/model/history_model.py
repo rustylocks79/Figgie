@@ -42,7 +42,7 @@ class HistoryModel(UtilityModel):
                 total_seen[suit.value] += seen[i][suit.value]
         return total_seen
 
-    def get_utility_change_from_buy(self, figgie: Figgie, index: int, suit: Suit) -> float:
+    def get_card_utility(self, figgie: Figgie, index: int, suit: Suit) -> float:
         hand = figgie.cards[index]
         total_seen = self.get_total_seen(figgie, index)
         if total_seen[suit.opposite().value] > 10:
@@ -52,15 +52,3 @@ class HistoryModel(UtilityModel):
                 return 0
             else:
                 return .25 * (10 + (SimpleModel.get_expected_from_pot(hand[suit.value + 1]) - SimpleModel.get_expected_from_pot(suit.value)))
-
-    def get_utility_change_from_sell(self, figgie: Figgie, index: int, suit: Suit) -> float:
-        hand = figgie.cards[index]
-        total_seen = self.get_total_seen(figgie, index)
-        if total_seen[suit.opposite().value] > 10:
-            return -(10 + (SimpleModel.get_expected_from_pot(hand[suit.value]) - SimpleModel.get_expected_from_pot(suit.value - 1)))
-        else:
-            if total_seen[suit.value] > 10:
-                return 0
-            else:
-                return -(.25 * (10 + (SimpleModel.get_expected_from_pot(hand[suit.value]) - SimpleModel.get_expected_from_pot(suit.value - 1))))
-

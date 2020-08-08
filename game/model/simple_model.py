@@ -9,7 +9,7 @@ CHANCE_TO_WIN = .5  # TODO: .5 is an arbitrary value
 
 class SimpleModel(UtilityModel):
 
-    def get_utility_change_from_buy(self, figgie: Figgie, index: int, suit: Suit) -> float:
+    def get_card_utility(self, figgie: Figgie, index: int, suit: Suit) -> float:
         hand = figgie.cards[index]
         if hand[suit.opposite().value] > 10:
             return 10 + (self.get_expected_from_pot(hand[suit.value + 1]) - self.get_expected_from_pot(suit.value))
@@ -18,16 +18,6 @@ class SimpleModel(UtilityModel):
                 return 0
             else:
                 return .25 * (10 + (self.get_expected_from_pot(hand[suit.value + 1]) - self.get_expected_from_pot(suit.value)))
-
-    def get_utility_change_from_sell(self, figgie: Figgie, index: int, suit: Suit) -> float:
-        hand = figgie.cards[index]
-        if hand[suit.opposite().value] > 10:
-            return -(10 + (self.get_expected_from_pot(hand[suit.value]) - self.get_expected_from_pot(suit.value - 1)))
-        else:
-            if hand[suit.value] > 10:
-                return 0
-            else:
-                return -(.25 * (10 + (self.get_expected_from_pot(hand[suit.value]) - self.get_expected_from_pot(suit.value - 1))))
 
     @staticmethod
     def get_expected_from_pot(cards: int):

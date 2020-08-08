@@ -73,47 +73,48 @@ class RegretAgent(Agent):
     def get_configuration(self, figgie: Figgie):
         player = figgie.active_player
         market = figgie.markets[Suit.CLUBS.value]
-        buy_exp_util = self.util_model.get_utility_change_from_buy(figgie, player, Suit.CLUBS)
-        sell_exp_util = self.util_model.get_utility_change_from_sell(figgie, player, Suit.CLUBS)
+        card_util = round(self.util_model.get_card_utility(figgie, player, Suit.CLUBS))
         if market.can_buy(player)[0]:
-            if buy_exp_util > market.selling_price:
-                return None, BuyAction(Suit.CLUBS), buy_exp_util, sell_exp_util
+            # if the utility gained by buying the card is greater than the cost of the card.
+            if card_util > market.selling_price:
+                return None, BuyAction(Suit.CLUBS)
         elif market.can_sell(player)[0]:
-            if abs(sell_exp_util) < market.buying_price:
-                return None, SellAction(Suit.CLUBS), buy_exp_util, sell_exp_util
+            # if the utility lost by selling the card is less than the value received for selling the card.
+            if card_util < market.buying_price:
+                return None, SellAction(Suit.CLUBS)
 
-        will_bid = (not market.is_buyer() or floor(buy_exp_util) > market.buying_price) and market.buying_player != player
-        will_ask = (not market.is_seller() or ceil(abs(sell_exp_util)) < market.selling_price) and market.selling_player != player and \
+        will_bid = (not market.is_buyer() or card_util > market.buying_price + 1) and market.buying_player != player
+        will_ask = (not market.is_seller() or card_util < market.selling_price - 1) and market.selling_player != player and \
                     figgie.cards[player][Suit.CLUBS.value] > 0
-        will_at = will_bid and will_ask and (not market.is_buyer() or not market.is_seller() or market.buying_price < market.selling_price)
+        will_at = will_bid and will_ask and (not market.is_buyer() or not market.is_seller() or market.buying_price + 1 < card_util < market.selling_price - 1)
         if will_at:
-            info_set = 'at exp: {}, market: {}, exp: {}, market: {}'.format(round(buy_exp_util), market.buying_price, round(sell_exp_util), market.selling_price)
+            info_set = 'at util: {}, market: {}, market: {}'.format(card_util, market.buying_price, market.selling_price)
             actions = []
-            min_buy = market.buying_price + 1 if market.buying_price is not None else 1
-            max_sell = market.selling_price - 1 if market.selling_price is not None else 8
-            for i in range(min_buy, min_buy + 8, 2):
-                for j in range(max_sell, max(max_sell - 8, i), -2):
+            min_buy = market.buying_price + 1 if market.is_buyer() else 1
+            max_sell = market.selling_price - 1 if market.is_seller() else 12
+            for i in range(min_buy, min_buy + 8, 1):
+                for j in range(max_sell, max(max_sell - 8, i), -1):
                     actions.append(AtAction(Suit.CLUBS, i, j))
         elif will_bid:
-            info_set = 'bid exp: {}, market: {}'.format(round(buy_exp_util),
-                                                        market.buying_price if market.is_buyer() else 'N')
+            info_set = 'bid util: {}, market: {}'.format(card_util, market.buying_price if market.is_buyer() else 'N')
             actions = []
             min_buy = market.buying_price + 1 if market.buying_price is not None else 1
             for i in range(min_buy, min_buy + 8, 2):
                 actions.append(BidAction(Suit.CLUBS, i))
         elif will_ask:
-            info_set = 'ask exp:{}, market {}'.format(round(sell_exp_util),
-                                                      market.selling_price if market.is_seller() else 'N')
+            info_set = 'ask util: {}, market {}'.format(card_util, market.selling_price if market.is_seller() else 'N')
             actions = []
             max_sell = market.selling_price - 1 if market.selling_price is not None else 8
             for i in range(max_sell, max(max_sell - 8, 1), -2):
                 actions.append(AskAction(Suit.CLUBS, i))
         else:
-            return None, PassAction(), buy_exp_util, sell_exp_util
-        return info_set, actions, buy_exp_util, sell_exp_util
+            return None, PassAction()
+        if len(actions) == 0:
+            assert False, 'action list can not be empty info set: {}'.format(info_set)
+        return info_set, actions
 
     def get_action(self, figgie, training_mode: bool = False) -> Action:
-        info_set, actions, buy_exp_util, sell_exp_util = self.get_configuration(figgie)
+        info_set, actions = self.get_configuration(figgie)
         if info_set is None:  # Action chosen by market
             return actions
         elif info_set in self.game_tree:
@@ -137,7 +138,7 @@ class RegretAgent(Agent):
             utility = figgie.get_utility()
             return utility[player] / pi_prime, 1.0
 
-        info_set, actions, _, _ = self.get_configuration(figgie)
+        info_set, actions = self.get_configuration(figgie)
         if info_set is None:
             figgie.preform(actions)
             return self.__train(figgie, pi, pi_prime, training_player)

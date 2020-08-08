@@ -19,14 +19,12 @@ def main():
     parser = argparse.ArgumentParser(description='Train a strategy using CFR')
     parser.add_argument('-t', '--trials', type=int, default=10_000, help='number of trials to run. ')
     parser.add_argument('-i', '--iterations', type=int, default=1, help='the number of times to train and run')
-    parser.add_argument('-g', '--games', type=int, default=10_000, help='number of test games to run. ')
     args = parser.parse_args()
 
     agent = RegretAgent(SimpleModel())
     print('Parameters: ')
     print('\titerations: {}'.format(args.iterations))
     print('\ttrials: {}'.format(args.trials))
-    print('\tgames: {}'.format(args.games))
     print()
 
     for i in range(1, args.iterations + 1):
