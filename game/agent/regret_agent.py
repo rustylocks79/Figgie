@@ -88,7 +88,7 @@ class RegretAgent(Agent):
             if card_util < market.buying_price:
                 return None, SellAction(Suit.CLUBS)
 
-        will_bid = (not market.is_buyer() or card_util > market.buying_price + 1) and market.buying_player != player
+        will_bid = (not market.is_buyer() or card_util > market.buying_price + 1) and market.buying_player != player and card_util != 0
         will_ask = (not market.is_seller() or card_util < market.selling_price - 1) and market.selling_player != player and \
                     figgie.cards[player][Suit.CLUBS.value] > 0
         will_at = will_bid and will_ask and (not market.is_buyer() or not market.is_seller() or market.buying_price + 1 < card_util < market.selling_price - 1)
@@ -99,9 +99,9 @@ class RegretAgent(Agent):
                                                   hand[Suit.CLUBS.value], self.transactions[Suit.CLUBS.value])
             actions = []
             min_buy = market.buying_price + 1 if market.is_buyer() else 1
-            max_sell = market.selling_price - 1 if market.is_seller() else 12
+            max_sell = market.selling_price if market.is_seller() else 12
             for i in range(min_buy, min_buy + 8):
-                for j in range(max_sell, max(max_sell - 8, i), -1):
+                for j in range(max(max_sell - 8, i + 1), max_sell):
                     actions.append(AtAction(Suit.CLUBS, i, j))
         elif will_bid:
             info_set = 'bid,{},{},{},{}'.format(card_util, market.buying_price if market.is_buyer() else 'N', hand[Suit.CLUBS.value], self.transactions[Suit.CLUBS.value])
@@ -112,8 +112,8 @@ class RegretAgent(Agent):
         elif will_ask:
             info_set = 'ask,{},{},{},{}'.format(card_util, market.selling_price if market.is_seller() else 'N', hand[Suit.CLUBS.value], self.transactions[Suit.CLUBS.value])
             actions = []
-            max_sell = market.selling_price - 1 if market.selling_price is not None else 8
-            for i in range(max_sell, max(max_sell - 8, 1), -1):
+            max_sell = market.selling_price if market.selling_price is not None else 8
+            for i in range(max(max_sell - 8, 1), max_sell):
                 actions.append(AskAction(Suit.CLUBS, i))
         else:
             return None, PassAction()

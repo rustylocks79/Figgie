@@ -5,7 +5,7 @@ import numpy as np
 from game.suit import Suit, SUITS
 
 NUM_PLAYERS = 4
-NUM_ROUNDS = 8
+NUM_ROUNDS = 16
 STARTING_CHIPS = 250
 
 

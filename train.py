@@ -8,8 +8,8 @@ from game.figgie import Figgie
 from game.model.simple_model import SimpleModel
 
 
-def save(strategy: dict, trials: int, info_set_method: str) -> str:
-    file_name = 'strategies/strategy_{}_{}.pickle'.format(trials, info_set_method)
+def save(strategy: dict, trials: int, model: str) -> str:
+    file_name = 'strategies/strategy_{}_{}.pickle'.format(trials, model)
     with open(file_name, 'wb') as file:
         pickle.dump(strategy, file)
     return file_name
@@ -40,7 +40,7 @@ def main():
         print('\t\tinfo sets: {}'.format(len(agent.game_tree)))
 
         start_time = time.process_time()
-        file_name = save(agent.game_tree, args.trials * i, 'basic')
+        file_name = save(agent.game_tree, args.trials * i, 'simple')
         total_time = time.process_time() - start_time
         print('\tSaving to {} took {} seconds'.format(file_name, total_time))
 

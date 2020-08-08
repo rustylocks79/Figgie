@@ -40,7 +40,7 @@ class BasicAgent(Agent):
         selling_price = 0
 
         # if the expected utility for buying the card is buying price (Can offer a bigger buy).
-        if not market.is_buyer() or card_util > market.buying_price + 1:
+        if not market.is_buyer() or card_util > market.buying_price + 1 and card_util != 0:
             buying_price = self.get_buying_price(figgie, card_util)
             will_bid = market.can_bid(player, buying_price)[0]
 

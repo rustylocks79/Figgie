@@ -36,6 +36,7 @@ def main():
     parser = argparse.ArgumentParser(description='Train a strategy using CFR')
     parser.add_argument('-g', '--games', type=int, default=10_000, help='number of test games to run. ')
     parser.add_argument('-v', '--verbose', type=bool, default=False, help='output actions')
+    parser.add_argument('-s', '--strategy', type=str, default='strategies/strategy_10000_simple.pickle', help='the regret agent strategy')
     args = parser.parse_args()
 
     figgie = Figgie()
@@ -43,7 +44,7 @@ def main():
     print('\tgames: {}'.format(args.games))
     print()
 
-    game_tree = load('strategies/strategy_10000_basic.pickle')
+    game_tree = load(args.strategy)
     agents = [MinusOneAgent(SimpleModel()),
               PlusOneAgent(SimpleModel()),
               PlusOneAgent(HistoryModel()),
