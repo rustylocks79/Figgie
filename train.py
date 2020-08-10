@@ -15,6 +15,12 @@ def save(strategy: dict, trials: int, model: str) -> str:
     return file_name
 
 
+def load(file_name: str) -> dict:
+    with open(file_name, 'rb') as file:
+        strategy = pickle.load(file)
+    return strategy
+
+
 def main():
     figgie = Figgie()
     parser = argparse.ArgumentParser(description='Train a strategy using CFR')
@@ -23,7 +29,7 @@ def main():
     parser.add_argument('-s', '--start', type=str, help='the strategy to start training')
     args = parser.parse_args()
 
-    game_tree = pickle.load(args.start)
+    game_tree = load(args.start)
     agent = RegretAgent(SimpleModel(), PlusOneAgent(SimpleModel()), game_tree=game_tree)
     print('Parameters: ')
     print('\titerations: {}'.format(args.iterations))
