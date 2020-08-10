@@ -20,9 +20,11 @@ def main():
     parser = argparse.ArgumentParser(description='Train a strategy using CFR')
     parser.add_argument('-t', '--trials', type=int, default=10_000, help='number of trials to run. ')
     parser.add_argument('-i', '--iterations', type=int, default=1, help='the number of times to train and run')
+    parser.add_argument('-s', '--start', type=str, help='the strategy to start training')
     args = parser.parse_args()
 
-    agent = RegretAgent(SimpleModel(), PlusOneAgent(SimpleModel()))
+    game_tree = pickle.load(args.start)
+    agent = RegretAgent(SimpleModel(), PlusOneAgent(SimpleModel()), game_tree=game_tree)
     print('Parameters: ')
     print('\titerations: {}'.format(args.iterations))
     print('\ttrials: {}'.format(args.trials))
