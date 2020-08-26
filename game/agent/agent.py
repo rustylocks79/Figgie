@@ -9,12 +9,8 @@ class Agent:
     def __init__(self):
         self.wins = 0
         self.total_utility = 0
-        self.sum_x = 0
-        self.sum_y = 0
-        self.sum_xy = 0
-        self.sum_x_squared = 0
-        self.sum_y_squared = 0
-        self.predictions = 0
+        self.total_error = 0
+        self.trails = 0
         self.cheating_model = CheatingModel()
 
     def get_action(self, figgie: Figgie) -> Action:
@@ -33,24 +29,16 @@ class Agent:
         """
         self.wins = 0
         self.total_utility = 0
-        self.sum_x = 0
-        self.sum_y = 0
-        self.sum_xy = 0
-        self.sum_x_squared = 0
-        self.sum_y_squared = 0
-        self.predictions = 0
+        self.total_error = 0
+        self.trails += 0
 
     def add_prediction(self, model_prediction, actual) -> None:
-        self.sum_x += model_prediction
-        self.sum_y += actual
-        self.sum_xy += model_prediction * actual
-        self.sum_x_squared += model_prediction * model_prediction
-        self.sum_y_squared += actual * actual
-        self.predictions += 1
+        self.total_error += pow(actual - model_prediction, 2)
+        self.trails += 1
 
-    def get_r_squared(self) -> float:
-        if self.predictions == 0:
+    def get_rmse(self) -> float:
+        if self.trails == 0:
             return 0
-        return (self.predictions * self.sum_xy - self.sum_x * self.sum_y) / sqrt((self.predictions * self.sum_x_squared - self.sum_x * self.sum_x) * (self.predictions * self.sum_y_squared - self.sum_y * self.sum_y))
+        return sqrt(self.total_error / self.trails)
 
 

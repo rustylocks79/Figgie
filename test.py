@@ -2,12 +2,10 @@ import argparse
 import pickle
 import time
 
+from game.agent.basic_agent import MinusOneAgent, PlusOneAgent
 from game.agent.regret_agent import RegretAgent
-from game.agent.basic_agent import BasicAgent, MinusOneAgent, PlusOneAgent
-from game.model.cheating_model import CheatingModel
-from game.model.history_model import HistoryModel
-from game.model.simple_model import SimpleModel
 from game.figgie import Figgie
+from game.model.simple_model import SimpleModel
 
 
 def play(game: Figgie, agents: list, games: int, verbose=False):
@@ -21,7 +19,7 @@ def play(game: Figgie, agents: list, games: int, verbose=False):
         print('agent {}: ({})'.format(i, type(agent)))
         print('\twins: {}'.format(agent.wins))
         print('\tavg. utility: {}, total utility: {}'.format(agent.total_utility / games, agent.total_utility))
-        print('\tr^2 of model: {}'.format(agent.get_r_squared()))
+        print('\trmse of model: {}'.format(agent.get_rmse()))
         if isinstance(agent, RegretAgent):
             print('\tavg unknown states: {}, unknown states: {}'.format(agent.unknown_states / games, agent.unknown_states))
 
@@ -45,10 +43,15 @@ def main():
     print()
 
     game_tree = load(args.strategy)
+    # agents = [MinusOneAgent(SimpleModel()),
+    #           PlusOneAgent(SimpleModel()),
+    #           PlusOneAgent(CheatingModel()),
+    #           RegretAgent(SimpleModel(), PlusOneAgent(SimpleModel()), game_tree=game_tree)]
+
     agents = [MinusOneAgent(SimpleModel()),
               PlusOneAgent(SimpleModel()),
-              PlusOneAgent(HistoryModel()),
-              RegretAgent(SimpleModel(), PlusOneAgent(SimpleModel()), game_tree=game_tree)]
+              MinusOneAgent(SimpleModel()),
+              PlusOneAgent(SimpleModel())]
 
     play(figgie, agents, args.games, args.verbose)
 

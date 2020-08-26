@@ -1,5 +1,6 @@
 from queue import Queue
 from random import choice, randint, shuffle
+
 import numpy as np
 
 from game.suit import Suit, SUITS
@@ -180,14 +181,12 @@ class Market:
             return False, 'amount must greater than 0'
         elif hand[self.suit.value] < 1:
             return False, 'player does not have the card to sell'
-        elif self.selling_price is not None and amount >= self.selling_price:
+        elif self.is_seller() and amount >= self.selling_price:
             return False, 'new amount is higher than current selling price {}. '.format(self.selling_price)
         return True, 'success'
 
     def ask(self, player: int, amount: int) -> None:
-        can, reason = self.can_ask(player, amount)
-        if not can:
-            raise ValueError('player {} can not ask {} for {} because {}'.format(player, amount, self.suit.name, reason))
+        assert self.can_ask(player, amount)[0], 'player {} can not ask {} for {} because {}'.format(player, amount, self.suit.name, self.can_ask(player, amount)[1])
         self.selling_price = amount
         self.selling_player = player
 
@@ -197,14 +196,12 @@ class Market:
             return False, 'amount must be greater than 0'
         if chips < amount:
             return False, 'player only has {} chips'.format(chips)
-        if self.buying_price is not None and amount <= self.buying_price:
+        if self.is_buyer() and amount <= self.buying_price:
             return False, 'new amount is lower than current buying price {}'.format(self.buying_price)
         return True, 'success'
 
     def bid(self, player: int, amount: int) -> None:
-        can, reason = self.can_bid(player, amount)
-        if not can:
-            raise ValueError('player {} can not bid {} for {} because {}. '.format(player, amount, self.suit.name, reason))
+        assert self.can_bid(player, amount)[0], 'player {} can not bid {} for {} because {}. '.format(player, amount, self.suit.name, self.can_bid(player, amount)[1])
         self.buying_price = amount
         self.buying_player = player
 
@@ -220,9 +217,7 @@ class Market:
         return True, 'success'
 
     def at(self, player: int, buying_price: int, selling_price: int) -> None:
-        can, reason = self.can_at(player, buying_price, selling_price)
-        if not can:
-            raise ValueError('player {} can not {} at {} because {}'.format(player, buying_price, selling_price, reason))
+        assert self.can_at(player, buying_price, selling_price)[0], 'player {} can not {} at {} because {}'.format(player, buying_price, selling_price, self.can_at(player, buying_price, selling_price)[1])
         self.bid(player, buying_price)
         self.ask(player, selling_price)
 
@@ -230,7 +225,7 @@ class Market:
         chips = self.figgie.chips[player]
         if player == self.selling_player:
             return False, 'cannot buy from yourself'
-        if self.selling_price is None:
+        if not self.is_seller():
             return False, 'no one has set an selling price'
         if chips < self.selling_price:
             return False, 'player only has {} chips'.format(chips)
@@ -239,9 +234,7 @@ class Market:
         return True, 'success'
 
     def buy(self, player: int) -> None:
-        can, reason = self.can_buy(player)
-        if not can:
-            raise ValueError("Player {} can buy {} from {} because {}".format(player, self.suit.name, self.selling_player, reason))
+        assert self.can_buy(player), 'Player {} can buy {} from {} because {}'.format(player, self.suit.name, self.selling_player, self.can_buy(player)[1])
 
         self.figgie.chips[self.selling_player] += self.selling_price
         self.figgie.cards[self.selling_player][self.suit.value] -= 1
@@ -252,7 +245,7 @@ class Market:
     def can_sell(self, player: int) -> tuple:
         if player is self.buying_player:
             return False, 'cannot sell to yourself'
-        if self.buying_price is None:
+        if not self.is_buyer():
             return False, 'no one has set a buying price'
         if self.figgie.chips[self.buying_player] < self.buying_price:
             return False, 'buying player only has {} chips'.format(self.figgie.chips[self.buying_player])
@@ -261,9 +254,7 @@ class Market:
         return True, 'success'
 
     def sell(self, player: int):
-        can, reason = self.can_sell(player)
-        if not can:
-            raise ValueError('player {} can not sell {} to player {} because {}'.format(player, self.suit.name, self.buying_player, reason))
+        assert self.can_sell(player), 'player {} can not sell {} to player {} because {}'.format(player, self.suit.name, self.buying_player, self.can_sell(player)[1])
 
         self.figgie.chips[player] += self.buying_price
         self.figgie.cards[player][self.suit.value] -= 1

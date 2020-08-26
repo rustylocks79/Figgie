@@ -7,7 +7,7 @@ from game.action.bid_action import BidAction
 from game.action.buy_action import BuyAction
 from game.action.pass_action import PassAction
 from game.action.sell_action import SellAction
-from game.figgie import Figgie, Suit, STARTING_CHIPS, SUITS
+from game.figgie import Figgie, STARTING_CHIPS, SUITS
 
 
 class Testing(unittest.TestCase):
@@ -27,7 +27,7 @@ class Testing(unittest.TestCase):
             can, _ = self.game.markets[suit.value].can_ask(0, 7)
             self.assertTrue(can)
 
-            self.game.preform(AskAction(self.game.active_player, '', suit, 7))
+            self.game.preform(AskAction(suit, 7))
             self.assertEqual(self.game.markets[suit.value].selling_price, 7,
                              'Selling price not set properly with ask operation')
             self.game.reset()
@@ -38,7 +38,7 @@ class Testing(unittest.TestCase):
             can, _ = self.game.markets[suit.value].can_bid(0, 7)
             self.assertTrue(can)
 
-            self.game.preform(BidAction(self.game.active_player, '', suit, 7))
+            self.game.preform(BidAction(suit, 7))
             self.assertEqual(self.game.markets[suit.value].buying_price, 7,
                              'Buying price not set properly with ask operation')
             self.game.reset()
@@ -48,16 +48,16 @@ class Testing(unittest.TestCase):
         for suit in SUITS:
             can, _ = self.game.markets[suit.value].can_ask(0, 7)
             self.assertTrue(can)
-            asking_player = self.game.get_active_player()
-            self.game.preform(AskAction(asking_player, '', suit, 7))
+            asking_player = self.game.active_player
+            self.game.preform(AskAction(suit, 7))
             self.assertEqual(self.game.markets[suit.value].selling_price, 7,
                              'Selling price not set properly with ask operation')
 
-            buying_player = self.game.get_active_player()
+            buying_player = self.game.active_player
             if buying_player == asking_player:
-                self.game.preform(PassAction(buying_player, ''))
+                self.game.preform(PassAction(buying_player))
                 buying_player = self.game.active_player
-            self.game.preform(BuyAction(buying_player, '', suit))
+            self.game.preform(BuyAction(suit))
             for s in SUITS:
                 self.assertEqual(self.game.markets[s.value].buying_price, None,
                                  'Market not reset after buy')
@@ -74,20 +74,20 @@ class Testing(unittest.TestCase):
         for suit in SUITS:
             can, _ = self.game.markets[suit.value].can_bid(0, 7)
             self.assertTrue(can)
-            bidding_player = self.game.get_active_player()
-            self.game.preform(BidAction(bidding_player, '', suit, 7))
+            bidding_player = self.game.active_player
+            self.game.preform(BidAction(suit, 7))
             self.assertEqual(self.game.markets[suit.value].buying_price, 7,
                              'Buying price not set properly with ask operation')
-            selling_player = self.game.get_active_player()
+            selling_player = self.game.active_player
             if selling_player == bidding_player:
-                self.game.preform(PassAction(selling_player, ''))
+                self.game.preform(PassAction(selling_player))
                 selling_player = self.game.active_player
-            self.game.preform(SellAction(selling_player, '', suit))
+            self.game.preform(SellAction(suit))
             for s in SUITS:
                 self.assertEqual(self.game.markets[s.value].buying_price, None,
-                                 'Market not reset after buy')
+                                 'Market not reset after sell')
                 self.assertEqual(self.game.markets[s.value].selling_price, None,
-                                 'Market not reset after buy')
+                                 'Market not reset after sell')
             self.assertEqual(self.game.chips[bidding_player], STARTING_CHIPS - 7, 'Chips not properly subtracted')
             self.assertEqual(self.game.chips[selling_player], STARTING_CHIPS + 7, 'Chips not properly added')
             self.assertEqual(self.game.cards[bidding_player][suit.value], 3, 'card not properly added')

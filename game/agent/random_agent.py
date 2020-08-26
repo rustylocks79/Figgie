@@ -8,7 +8,7 @@ from game.action.buy_action import BuyAction
 from game.action.pass_action import PassAction
 from game.action.sell_action import SellAction
 from game.agent.agent import Agent
-from game.figgie import Figgie, SUITS, Suit
+from game.figgie import Figgie, Suit
 
 MAX_PRICE = 30  # TODO: come up with formula
 

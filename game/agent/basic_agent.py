@@ -1,4 +1,4 @@
-from math import ceil, floor
+import numpy as np
 
 from game.action.action import Action
 from game.action.ask_action import AskAction
@@ -8,8 +8,9 @@ from game.action.buy_action import BuyAction
 from game.action.pass_action import PassAction
 from game.action.sell_action import SellAction
 from game.agent.agent import Agent
-from game.figgie import Figgie, Suit, Market
+from game.figgie import Figgie, Suit
 from game.model.utility_model import UtilityModel
+from game.suit import SUITS
 
 
 class BasicAgent(Agent):
@@ -19,46 +20,82 @@ class BasicAgent(Agent):
 
     def get_action(self, figgie: Figgie) -> Action:
         player = figgie.active_player
-        market = figgie.markets[Suit.CLUBS.value]
+        best_action = None
+        best_adv = 0
+        best_suit = None
+        utils = np.full(4, 0, dtype=float)
+        for suit in SUITS:
+            market = figgie.markets[suit.value]
+            card_util = round(self.util_model.get_card_utility(figgie, player, suit))
+            actual_util = round(self.cheating_model.get_card_utility(figgie, player, suit))
+            self.add_prediction(card_util, actual_util)
+            utils[suit.value] = card_util
 
-        card_util = round(self.util_model.get_card_utility(figgie, player, Suit.CLUBS))
-        actual_util = round(self.cheating_model.get_card_utility(figgie, player, Suit.CLUBS))
-        self.add_prediction(card_util, actual_util)
+            if market.can_buy(player)[0]:
+                buy_adv = utils[suit.value] - market.selling_price
+                if buy_adv > best_adv:
+                    best_action = 'buy'
+                    best_adv = buy_adv
+                    best_suit = suit
 
-        if market.can_buy(player)[0]:
-            # if the utility gained by buying the card is greater than the cost of the card.
-            if card_util > market.selling_price:
-                return BuyAction(Suit.CLUBS)
-        elif market.can_sell(player)[0]:
-            # if the utility lost by selling the card is less than the value received for selling the card.
-            if card_util < market.buying_price:
-                return SellAction(Suit.CLUBS)
+            if market.can_sell(player)[0]:
+                sell_adv = market.buying_price - utils[suit.value]
+                if sell_adv > best_adv:
+                    best_action = 'sell'
+                    best_adv = sell_adv
+                    best_suit = suit
 
-        will_bid = False
-        will_ask = False
-        buying_price = 0
-        selling_price = 0
+        if best_action is not None:
+            if best_action == 'buy':
+                return BuyAction(best_suit, notes='with exp util: {}, adv: {}'.format(utils[best_suit.value], best_adv))
+            elif best_action == 'sell':
+                return SellAction(best_suit, notes='with exp util: {}, adv: {}'.format(utils[best_suit.value], best_adv))
+            else:
+                raise ValueError('Best action can not be: {}'.format(best_action))
 
-        # if the expected utility for buying the card is buying price (Can offer a bigger buy).
-        if not market.is_buyer() or card_util > market.buying_price + 1 and card_util != 0:
-            buying_price = self.get_buying_price(figgie, card_util)
-            will_bid = market.can_bid(player, buying_price)[0]
+        best_action = None
+        best_adv = 0
+        best_suit = None
+        best_price = 0
 
-        # if the expected utility lost for selling the card is less than the selling price (Can offer a lower sell)
-        if not market.is_seller() or card_util < market.selling_price - 1:
-            selling_price = self.get_selling_price(figgie, card_util)
-            will_ask = market.can_ask(player, selling_price)[0]
+        for suit in SUITS:
+            market = figgie.markets[suit.value]
+            buying_price = int(self.get_buying_price(figgie, utils[suit.value]))
+            selling_price = int(self.get_selling_price(figgie, utils[suit.value]))
+            buy_adv = utils[suit.value] - buying_price
+            sell_adv = selling_price - utils[suit.value]
 
-        will_at = will_bid and will_ask and buying_price < selling_price
+            if market.can_bid(player, buying_price)[0]:
+                if buy_adv > best_adv:
+                    best_action = 'bid'
+                    best_adv = buy_adv
+                    best_suit = suit
+                    best_price = buying_price
 
-        if will_at:
-            return AtAction(Suit.CLUBS, buying_price, selling_price)
-        elif will_bid:
-            return BidAction(Suit.CLUBS, buying_price)
-        elif will_at:
-            return AskAction(Suit.CLUBS, selling_price)
-        else:
-            return PassAction()
+            if market.can_ask(player, selling_price)[0]:
+                if sell_adv > best_adv:
+                    best_action = 'ask'
+                    best_adv = sell_adv
+                    best_suit = suit
+                    best_price = selling_price
+
+            if market.can_at(player, buying_price, selling_price)[0]:
+                at_adv = buy_adv + sell_adv
+                if at_adv > best_adv:
+                    best_action = 'at'
+                    best_adv = at_adv
+                    best_suit = suit
+                    best_price = (buying_price, selling_price)
+
+        if best_action is not None:
+            if best_action == 'bid':
+                return BidAction(best_suit, best_price)
+            elif best_action == 'ask':
+                return AskAction(best_suit, best_price)
+            elif best_action == 'at':
+                return AtAction(best_suit, best_price[0], best_price[1])
+
+        return PassAction()
 
     def on_action(self, figgie: Figgie, index: int, action: Action) -> None:
         self.util_model.on_action(figgie, index, action)

@@ -17,7 +17,7 @@ class SimpleModel(UtilityModel):
             if hand[suit.value] > 10:
                 return 0
             else:
-                return .25 * (10 + (self.get_expected_from_pot(hand[suit.value + 1]) - self.get_expected_from_pot(suit.value)))
+                return .25 * (10 + (self.get_expected_from_pot(hand[suit.value] + 1) - self.get_expected_from_pot(suit.value)))
 
     @staticmethod
     def get_expected_from_pot(cards: int):

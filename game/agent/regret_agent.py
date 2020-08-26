@@ -1,5 +1,3 @@
-from math import floor, ceil
-
 import numpy as np
 
 from game.action.action import Action
@@ -10,9 +8,7 @@ from game.action.buy_action import BuyAction
 from game.action.pass_action import PassAction
 from game.action.sell_action import SellAction
 from game.agent.agent import Agent
-from game.agent.basic_agent import PlusOneAgent
-from game.figgie import Figgie, NUM_PLAYERS, Market
-from game.model.simple_model import SimpleModel
+from game.figgie import Figgie, NUM_PLAYERS
 from game.suit import Suit
 
 
