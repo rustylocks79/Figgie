@@ -100,7 +100,7 @@ class ModularAgent(Agent):
                 if market.is_seller():
                     sell_adv = (market.selling_price - 1) - utils[suit.value] if (market.selling_price - 1) > utils[suit.value] else None
                 else:
-                    sell_adv = utils[suit.value]  # TODO: do something better than assuming that the max reasonable sell price is 2*util
+                    sell_adv = utils[suit.value]
             else:
                 sell_adv = None
 
@@ -155,7 +155,7 @@ class ModularAgent(Agent):
                 bidding_price = self.buy_pricer.get_buying_price(figgie, best_suit, utils[best_suit.value])
                 asking_price = self.sell_pricer.get_selling_price(figgie, best_suit, utils[best_suit.value])
                 assert market.can_at(player, bidding_price, asking_price)[0], market.can_at(player, bidding_price, asking_price)[1]
-                return AtAction(best_suit, bidding_price, asking_price)  # TODO: pretty sure this is breakable (an at pricer?)
+                return AtAction(best_suit, bidding_price, asking_price)
             else:
                 raise ValueError('Best action can not be: {}'.format(best_action))
 

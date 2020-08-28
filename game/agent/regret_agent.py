@@ -10,7 +10,6 @@ from game.action.sell_action import SellAction
 from game.agent.agent import Agent
 from game.agent.modular_agent import ModularAgent
 from game.figgie import Figgie, NUM_PLAYERS
-from game.suit import Suit, SUITS
 
 
 class GameNode:
@@ -101,7 +100,7 @@ class RegretAgent(Agent):
                 info_set = 'ask,{},{},{}'.format(utils[best_suit.value], market.selling_price if market.is_seller() else 'N',
                                                  hand[best_suit.value])
                 actions = []
-                max_sell = market.selling_price if market.selling_price is not None else 8  # TODO: this is horrible
+                max_sell = market.selling_price if market.selling_price is not None else int(utils[best_suit.value] * 2)
                 for i in range(max(max_sell - 8, 1), max_sell):
                     actions.append(AskAction(best_suit, i))
                 return info_set, actions
