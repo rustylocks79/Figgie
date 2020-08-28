@@ -140,9 +140,9 @@ class Figgie:
             while not self.is_finished():
                 player = self.active_player
                 action = agents[player].get_action(self)
+                self.preform(action)
                 if verbose:
                     print(str(action))
-                self.preform(action)
                 for j, agent in enumerate(agents):
                     agent.on_action(self, j, action)
             utility = self.get_utility()

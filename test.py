@@ -2,7 +2,7 @@ import argparse
 import pickle
 import time
 
-from game.agent.basic_agent import MinusOneAgent, PlusOneAgent
+from game.agent.modular_agent import *
 from game.agent.regret_agent import RegretAgent
 from game.figgie import Figgie
 from game.model.simple_model import SimpleModel
@@ -48,10 +48,10 @@ def main():
     #           PlusOneAgent(CheatingModel()),
     #           RegretAgent(SimpleModel(), PlusOneAgent(SimpleModel()), game_tree=game_tree)]
 
-    agents = [MinusOneAgent(SimpleModel()),
-              PlusOneAgent(SimpleModel()),
-              MinusOneAgent(SimpleModel()),
-              PlusOneAgent(SimpleModel())]
+    agents = [ModularAgent(SimpleModel(), MarketBuyPricer(), MarketSellPricer()),
+              ModularAgent(SimpleModel(), UtilBuyPricer(), UtilSellPricer()),
+              ModularAgent(SimpleModel(), HalfBuyPricer(), HalfSellPricer()),
+              ModularAgent(SimpleModel(), RandomBuyPricer(), RandomSellPricer())]
 
     play(figgie, agents, args.games, args.verbose)
 

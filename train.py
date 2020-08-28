@@ -2,7 +2,7 @@ import argparse
 import pickle
 import time
 
-from game.agent.basic_agent import PlusOneAgent
+from game.agent.modular_agent import *
 from game.agent.regret_agent import RegretAgent
 from game.figgie import Figgie
 from game.model.simple_model import SimpleModel
@@ -29,8 +29,11 @@ def main():
     parser.add_argument('-s', '--start', type=str, help='the strategy to start training')
     args = parser.parse_args()
 
-    game_tree = load(args.start)
-    agent = RegretAgent(SimpleModel(), PlusOneAgent(SimpleModel()), game_tree=game_tree)
+    if args.start is not None:
+        game_tree = load(args.start)
+    else:
+        game_tree = {}
+    agent = RegretAgent(SimpleModel(), ModularAgent(SimpleModel(), RandomBuyPricer(), RandomSellPricer()), game_tree=game_tree)
     print('Parameters: ')
     print('\titerations: {}'.format(args.iterations))
     print('\ttrials: {}'.format(args.trials))

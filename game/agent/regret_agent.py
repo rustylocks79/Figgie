@@ -8,8 +8,9 @@ from game.action.buy_action import BuyAction
 from game.action.pass_action import PassAction
 from game.action.sell_action import SellAction
 from game.agent.agent import Agent
+from game.agent.modular_agent import ModularAgent
 from game.figgie import Figgie, NUM_PLAYERS
-from game.suit import Suit
+from game.suit import Suit, SUITS
 
 
 class GameNode:
@@ -71,51 +72,55 @@ class RegretAgent(Agent):
     def get_configuration(self, figgie: Figgie):
         player = figgie.active_player
         hand = figgie.cards[player]
-        market = figgie.markets[Suit.CLUBS.value]
-        card_util = round(self.util_model.get_card_utility(figgie, player, Suit.CLUBS))
-        actual_util = round(self.cheating_model.get_card_utility(figgie, player, Suit.CLUBS))
-        self.add_prediction(card_util, actual_util)
-        if market.can_buy(player)[0]:
-            # if the utility gained by buying the card is greater than the cost of the card.
-            if card_util > market.selling_price:
-                return None, BuyAction(Suit.CLUBS)
-        elif market.can_sell(player)[0]:
-            # if the utility lost by selling the card is less than the value received for selling the card.
-            if card_util < market.buying_price:
-                return None, SellAction(Suit.CLUBS)
+        utils = ModularAgent.calc_card_utils(self, figgie)
+        best_action, best_adv, best_suit = ModularAgent.get_best_transaction(figgie, utils)
+        if best_action is not None:
+            player = figgie.active_player
+            market = figgie.markets[best_suit.value]
+            if best_action == 'buy':
+                assert market.can_buy(player)[0], market.can_buy(player)[1]
+                return None, BuyAction(best_suit, notes='with exp util: {}, adv: {}'.format(utils[best_suit.value], best_adv))
+            elif best_action == 'sell':
+                assert market.can_sell(player)[0], market.can_sell(player)[1]
+                return None, SellAction(best_suit, notes='with exp util: {}, adv: {}'.format(utils[best_suit.value], best_adv))
+            else:
+                raise ValueError('Best action can not be: {}'.format(best_action))
 
-        will_bid = (not market.is_buyer() or card_util > market.buying_price + 1) and market.buying_player != player and card_util != 0
-        will_ask = (not market.is_seller() or card_util < market.selling_price - 1) and market.selling_player != player and \
-                    figgie.cards[player][Suit.CLUBS.value] > 0
-        will_at = will_bid and will_ask and (not market.is_buyer() or not market.is_seller() or market.buying_price + 1 < card_util < market.selling_price - 1)
-        if will_at:
-            info_set = 'at,{},{},{},{}'.format(card_util,
-                                                  market.buying_price if market.is_buyer() else 'N',
-                                                  market.selling_price if market.is_seller() else 'N',
-                                                  hand[Suit.CLUBS.value])
-            actions = []
-            min_buy = market.buying_price + 1 if market.is_buyer() else 1
-            max_sell = market.selling_price if market.is_seller() else card_util + 8
-            for i in range(min_buy, min_buy + 8):
-                for j in range(max(max_sell - 8, i + 1), max_sell):
-                    actions.append(AtAction(Suit.CLUBS, i, j))
-        elif will_bid:
-            info_set = 'bid,{},{},{}'.format(card_util, market.buying_price if market.is_buyer() else 'N', hand[Suit.CLUBS.value])
-            actions = []
-            min_buy = market.buying_price + 1 if market.buying_price is not None else 1
-            for i in range(min_buy, min_buy + 8):
-                actions.append(BidAction(Suit.CLUBS, i))
-        elif will_ask:
-            info_set = 'ask,{},{},{}'.format(card_util, market.selling_price if market.is_seller() else 'N', hand[Suit.CLUBS.value])
-            actions = []
-            max_sell = market.selling_price if market.selling_price is not None else 8
-            for i in range(max(max_sell - 8, 1), max_sell):
-                actions.append(AskAction(Suit.CLUBS, i))
-        else:
-            return None, PassAction()
-        if len(actions) == 0:
-            assert False, 'action list can not be empty info set: {}'.format(info_set)
-        return info_set, actions
+        best_action, best_adv, best_suit = ModularAgent.get_best_market_adv(figgie, utils)
+        if best_action is not None:
+            market = figgie.markets[best_suit.value]
+            if best_action == 'bid':
+                info_set = 'bid,{},{},{}'.format(utils[best_suit.value], market.buying_price if market.is_buyer() else 'N',
+                                                 hand[best_suit.value])
+                actions = []
+                min_buy = market.buying_price + 1 if market.buying_price is not None else 1
+                for i in range(min_buy, min_buy + 8):
+                    actions.append(BidAction(best_suit, i))
+                return info_set, actions
+            elif best_action == 'ask':
+                info_set = 'ask,{},{},{}'.format(utils[best_suit.value], market.selling_price if market.is_seller() else 'N',
+                                                 hand[best_suit.value])
+                actions = []
+                max_sell = market.selling_price if market.selling_price is not None else 8  # TODO: this is horrible
+                for i in range(max(max_sell - 8, 1), max_sell):
+                    actions.append(AskAction(best_suit, i))
+                return info_set, actions
+            elif best_action == 'at':
+                info_set = 'at,{},{},{},{}'.format(utils[best_suit.value],
+                                                   market.buying_price if market.is_buyer() else 'N',
+                                                   market.selling_price if market.is_seller() else 'N',
+                                                   hand[best_suit.value])
+                actions = []
+                min_buy = market.buying_price + 1 if market.is_buyer() else 1
+                max_sell = market.selling_price if market.is_seller() else int(utils[best_suit.value]) + 8
+                for i in range(min_buy, min_buy + 8):
+                    for j in range(max(max_sell - 8, i + 1), max_sell):
+                        actions.append(AtAction(best_suit, i, j))
+                return info_set, actions
+            else:
+                raise ValueError('Best action can not be: {}'.format(best_action))
+
+        return None, PassAction()
 
     def get_action(self, figgie, training_mode: bool = False) -> Action:
         info_set, actions = self.get_configuration(figgie)
@@ -128,6 +133,7 @@ class RegretAgent(Agent):
             return self.default_agent.get_action(figgie)
 
     def on_action(self, figgie: Figgie, index: int, action: Action) -> None:
+        self.util_model.on_action(figgie, index, action)
         if not isinstance(action, PassAction):
             self.transactions[action.suit.value] += 1
 
