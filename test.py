@@ -43,15 +43,11 @@ def main():
     print()
 
     game_tree = load(args.strategy)
-    # agents = [MinusOneAgent(SimpleModel()),
-    #           PlusOneAgent(SimpleModel()),
-    #           PlusOneAgent(CheatingModel()),
-    #           RegretAgent(SimpleModel(), PlusOneAgent(SimpleModel()), game_tree=game_tree)]
 
     agents = [ModularAgent(SimpleModel(), MarketBuyPricer(), MarketSellPricer()),
               ModularAgent(SimpleModel(), UtilBuyPricer(), UtilSellPricer()),
-              ModularAgent(SimpleModel(), HalfBuyPricer(), HalfSellPricer()),
-              ModularAgent(SimpleModel(), RandomBuyPricer(), RandomSellPricer())]
+              ModularAgent(SimpleModel(), RandomBuyPricer(), RandomSellPricer()),
+              RegretAgent(SimpleModel(), ModularAgent(SimpleModel(), HalfBuyPricer(), HalfSellPricer()), game_tree=game_tree)]
 
     play(figgie, agents, args.games, args.verbose)
 
