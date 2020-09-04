@@ -10,7 +10,12 @@ from game.action.sell_action import SellAction
 from game.agent.agent import Agent
 from game.agent.modular_agent import ModularAgent
 from game.figgie import Figgie, NUM_PLAYERS
+from game.suit import Suit
 
+
+class InfoSetGenerator:
+    def generate_info_set(self, action: str, suit: Suit, figgie: Figgie, agent: Agent, util: float):
+        pass
 
 class GameNode:
     def __init__(self, num_actions: int):
@@ -58,13 +63,14 @@ class GameNode:
 
 
 class RegretAgent(Agent):
-    def __init__(self, util_model, default_agent: Agent, game_tree: dict = None):
+    def __init__(self, util_model, info_set_generator: InfoSetGenerator, default_agent: Agent, game_tree: dict = None):
         super().__init__()
         if game_tree is None:
             game_tree = {}
         self.game_tree = game_tree
         self.unknown_states = 0
         self.util_model = util_model
+        self.info_set_generator = info_set_generator
         self.default_agent = default_agent
         self.transactions = np.full(4, 0, dtype=int)
 
@@ -88,27 +94,20 @@ class RegretAgent(Agent):
         best_action, best_adv, best_suit = ModularAgent.get_best_market_adv(figgie, utils)
         if best_action is not None:
             market = figgie.markets[best_suit.value]
+            info_set = self.info_set_generator.generate_info_set(best_action, best_suit, figgie, self, utils[best_suit.value])
             if best_action == 'bid':
-                info_set = 'bid,{},{},{}'.format(utils[best_suit.value], market.buying_price if market.is_buyer() else 'N',
-                                                 hand[best_suit.value])
                 actions = []
                 min_buy = market.buying_price + 1 if market.buying_price is not None else 1
                 for i in range(min_buy, min_buy + 8):
                     actions.append(BidAction(best_suit, i))
                 return info_set, actions
             elif best_action == 'ask':
-                info_set = 'ask,{},{},{}'.format(utils[best_suit.value], market.selling_price if market.is_seller() else 'N',
-                                                 hand[best_suit.value])
                 actions = []
                 max_sell = market.selling_price if market.selling_price is not None else int(utils[best_suit.value] * 2)
                 for i in range(max(max_sell - 8, 1), max_sell):
                     actions.append(AskAction(best_suit, i))
                 return info_set, actions
             elif best_action == 'at':
-                info_set = 'at,{},{},{},{}'.format(utils[best_suit.value],
-                                                   market.buying_price if market.is_buyer() else 'N',
-                                                   market.selling_price if market.is_seller() else 'N',
-                                                   hand[best_suit.value])
                 actions = []
                 min_buy = market.buying_price + 1 if market.is_buyer() else 1
                 max_sell = market.selling_price if market.is_seller() else int(utils[best_suit.value]) + 8
@@ -191,3 +190,39 @@ class RegretAgent(Agent):
             return util, p_tail * strategy[action_index]
         else:
             return util, p_tail
+
+
+class BasicInfoSetGenerator(InfoSetGenerator):
+    def generate_info_set(self, action: str, suit: Suit, figgie: Figgie, agent: Agent, util: float):
+        market = figgie.markets[suit.value]
+        hand = figgie.cards[figgie.active_player]
+        if action == 'bid':
+            return 'bid,{},{},{}'.format(util, market.buying_price if market.is_buyer() else 'N',
+                                         hand[suit.value])
+        elif action == 'ask':
+            return 'ask,{},{},{}'.format(util, market.selling_price if market.is_seller() else 'N',
+                                         hand[suit.value])
+        elif action == 'at':
+            return 'at,{},{},{},{}'.format(util, market.buying_price if market.is_buyer() else 'N',
+                                           market.selling_price if market.is_seller() else 'N',
+                                           hand[suit.value])
+        else:
+            raise ValueError("Invalid action: {}".format(action))
+
+
+class AdvInfoSetGenerator(InfoSetGenerator):
+    def generate_info_set(self, action: str, suit: Suit, figgie: Figgie, agent: Agent, util: float):
+        market = figgie.markets[suit.value]
+        hand = figgie.cards[figgie.active_player]
+        if action == 'bid':
+            return 'bid,{},{},{},{}'.format(util, market.buying_price if market.is_buyer() else 'N',
+                                         hand[suit.value], agent.transactions[suit.value])
+        elif action == 'ask':
+            return 'ask,{},{},{},{}'.format(util, market.selling_price if market.is_seller() else 'N',
+                                         hand[suit.value], agent.transactions[suit.value])
+        elif action == 'at':
+            return 'at,{},{},{},{},{}'.format(util, market.buying_price if market.is_buyer() else 'N',
+                                           market.selling_price if market.is_seller() else 'N',
+                                           hand[suit.value], agent.transactions[suit.value])
+        else:
+            raise ValueError("Invalid action: {}".format(action))

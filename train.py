@@ -3,7 +3,7 @@ import pickle
 import time
 
 from game.agent.modular_agent import *
-from game.agent.regret_agent import RegretAgent
+from game.agent.regret_agent import RegretAgent, BasicInfoSetGenerator, AdvInfoSetGenerator
 from game.figgie import Figgie
 from game.model.simple_model import SimpleModel
 
@@ -27,13 +27,22 @@ def main():
     parser.add_argument('-t', '--trials', type=int, default=10_000, help='number of trials to run. ')
     parser.add_argument('-i', '--iterations', type=int, default=1, help='the number of times to train and run')
     parser.add_argument('-s', '--start', type=str, help='the strategy to start training')
+    parser.add_argument('-g', '--generator', type=str, default='basic', help="'basic' or 'adv'")
     args = parser.parse_args()
 
     if args.start is not None:
         game_tree = load(args.start)
     else:
         game_tree = {}
-    agent = RegretAgent(SimpleModel(), ModularAgent(SimpleModel(), RandomBuyPricer(), RandomSellPricer()), game_tree=game_tree)
+
+    if args.generator == 'basic':
+        info_set_generator = BasicInfoSetGenerator()
+    elif args.generator == 'adv':
+        info_set_generator = AdvInfoSetGenerator()
+    else:
+        raise ValueError('Unknown info set generator: {}'.format(args.info))
+
+    agent = RegretAgent(SimpleModel(), info_set_generator, ModularAgent(SimpleModel(), RandomBuyPricer(), RandomSellPricer()), game_tree=game_tree)
     print('Parameters: ')
     print('\titerations: {}'.format(args.iterations))
     print('\ttrials: {}'.format(args.trials))
@@ -51,7 +60,7 @@ def main():
         print('\t\tinfo sets: {}'.format(len(agent.game_tree)))
 
         start_time = time.process_time()
-        file_name = save(agent.game_tree, args.trials * i, 'simple')
+        file_name = save(agent.game_tree, args.trials * i, 'simple_{}'.format(args.generator))
         total_time = time.process_time() - start_time
         print('\tSaving to {} took {} seconds'.format(file_name, total_time))
 
