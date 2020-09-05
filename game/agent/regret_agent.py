@@ -173,6 +173,7 @@ class RegretAgent(Agent):
 
         action_index = np.random.choice(len(probability), p=probability)
         figgie.preform(actions[action_index])
+        self.on_action(figgie, player, actions[action_index])
         result = self.__train(figgie, pi * strategy[action_index], pi_prime * probability[action_index], training_player) if player == training_player else self.__train(figgie, pi, pi_prime, training_player)
         util = -result[0]
         p_tail = result[1]
