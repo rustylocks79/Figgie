@@ -3,7 +3,7 @@ import pickle
 import time
 
 from game.agent.modular_agent import *
-from game.agent.regret_agent import RegretAgent
+from game.agent.regret_agent import RegretAgent, AdvInfoSetGenerator
 from game.figgie import Figgie
 from game.model.simple_model import SimpleModel
 
@@ -47,7 +47,7 @@ def main():
     agents = [ModularAgent(SimpleModel(), MarketBuyPricer(), MarketSellPricer()),
               ModularAgent(SimpleModel(), UtilBuyPricer(), UtilSellPricer()),
               ModularAgent(SimpleModel(), RandomBuyPricer(), RandomSellPricer()),
-              RegretAgent(SimpleModel(), ModularAgent(SimpleModel(), HalfBuyPricer(), HalfSellPricer()), game_tree=game_tree)]
+              RegretAgent(SimpleModel(), AdvInfoSetGenerator(), ModularAgent(SimpleModel(), HalfBuyPricer(), HalfSellPricer()), game_tree=game_tree)]
 
     play(figgie, agents, args.games, args.verbose)
 

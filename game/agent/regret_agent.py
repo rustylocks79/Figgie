@@ -144,6 +144,7 @@ class RegretAgent(Agent):
         for i in range(trials):
             self.__train(game, 1.0, 1.0, i % NUM_PLAYERS)
             game.reset()
+            self.reset()
 
     def __train(self, figgie: Figgie, pi: float, pi_prime: float, training_player: int) -> tuple:
         player = figgie.active_player
