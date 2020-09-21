@@ -1,4 +1,5 @@
 from game.agent.regret_agent import *
+from game.figgie import Figgie
 
 
 def get_last_transaction(figgie: Figgie, operation: str, suit: Suit) -> str:
