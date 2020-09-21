@@ -12,12 +12,13 @@ class SimpleModel(UtilityModel):
     def get_card_utility(self, figgie: Figgie, index: int, suit: Suit) -> float:
         hand = figgie.cards[index]
         if hand[suit.opposite().value] > 10:
-            return 10 + (self.get_expected_from_pot(hand[suit.value + 1]) - self.get_expected_from_pot(suit.value))
+            result = 10 + (self.get_expected_from_pot(hand[suit.value + 1]) - self.get_expected_from_pot(suit.value))
         else:
             if hand[suit.value] > 10:
-                return 0
+                result = 0
             else:
-                return .25 * (10 + (self.get_expected_from_pot(hand[suit.value] + 1) - self.get_expected_from_pot(suit.value)))
+                result = .25 * (10 + (self.get_expected_from_pot(hand[suit.value] + 1) - self.get_expected_from_pot(suit.value)))
+        return max(result, 0)
 
     @staticmethod
     def get_expected_from_pot(cards: int):
@@ -32,6 +33,6 @@ class SimpleModel(UtilityModel):
         elif cards >= 6:
             return PROBABILITY_8_CARD_GOAL_SUIT * 120 + PROBABILITY_10_CARD_GOAL_SUIT * 100
         elif cards == 5:
-            return PROBABILITY_8_CARD_GOAL_SUIT * 100 + PROBABILITY_10_CARD_GOAL_SUIT * (50 + CHANCE_TO_WIN * 50)
+            return PROBABILITY_8_CARD_GOAL_SUIT * 100 + PROBABILITY_10_CARD_GOAL_SUIT * (50 + 5/6 * 50)
         else:
-            return CHANCE_TO_WIN * (.33 * 120 + .67 * 100)
+            return cards / 5 * PROBABILITY_8_CARD_GOAL_SUIT * 120 + cards / 6 * PROBABILITY_10_CARD_GOAL_SUIT * 100

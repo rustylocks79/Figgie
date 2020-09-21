@@ -11,7 +11,7 @@ class CheatingModel(UtilityModel):
 
         if suit == figgie.goal_suit:
             new_cards = figgie.cards.copy()
-            if market.is_seller() and market.selling_player != index:
+            if market.has_seller() and market.selling_player != index:
                 # if there is a seller in the market then evaluate the card based on buying the card from that player.
                 new_cards[market.selling_player][suit.value] -= 1
             else:

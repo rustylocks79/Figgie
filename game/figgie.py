@@ -6,7 +6,8 @@ import numpy as np
 from game.suit import Suit, SUITS
 
 NUM_PLAYERS = 4
-NUM_ROUNDS = 16
+NUM_CARD = 40
+NUM_ROUNDS = NUM_CARD / 2
 STARTING_CHIPS = 250
 
 
@@ -81,12 +82,16 @@ class Figgie:
         elif action.operation == 'bid':
             self.markets[action.suit.value].bid(self.active_player, action.buying_price)
         elif action.operation == 'buy':
-            action.seller = self.markets[action.suit.value].selling_player
-            self.markets[action.suit.value].buy(self.active_player)
+            market = self.markets[action.suit.value]
+            action.seller = market.selling_player
+            action.price = market.selling_price
+            market.buy(self.active_player)
             self.clear_markets()
         elif action.operation == 'sell':
-            action.buyer = self.markets[action.suit.value].buying_player
-            self.markets[action.suit.value].sell(self.active_player)
+            market = self.markets[action.suit.value]
+            action.buyer = market.buying_player
+            action.price = market.buying_price
+            market.sell(self.active_player)
             self.clear_markets()
         elif action.operation == 'at':
             self.markets[action.suit.value].at(self.active_player, action.buying_price, action.selling_price)
@@ -152,6 +157,8 @@ class Figgie:
             winners = [j for j in range(len(utility)) if utility[j] == max_utility]
             for winner in winners:
                 agents[winner].wins += 1
+            for agent in agents:
+                agent.reset()
             self.reset()
 
     def __new_queue(self):
@@ -169,6 +176,8 @@ class Market:
         self.selling_player = None
         self.suit = suit
         self.figgie = figgie
+        self.last_price_sold = None
+        self.last_price_bought = None
 
     def can_ask(self, player: int, amount: int) -> tuple:
         """
@@ -181,7 +190,7 @@ class Market:
             return False, 'amount must greater than 0'
         elif hand[self.suit.value] < 1:
             return False, 'player does not have the card to sell'
-        elif self.is_seller() and amount >= self.selling_price:
+        elif self.has_seller() and amount >= self.selling_price:
             return False, 'new amount is higher than current selling price {}. '.format(self.selling_price)
         return True, 'success'
 
@@ -196,7 +205,7 @@ class Market:
             return False, 'amount must be greater than 0'
         if chips < amount:
             return False, 'player only has {} chips'.format(chips)
-        if self.is_buyer() and amount <= self.buying_price:
+        if self.has_buyer() and amount <= self.buying_price:
             return False, 'new amount is lower than current buying price {}'.format(self.buying_price)
         return True, 'success'
 
@@ -225,7 +234,7 @@ class Market:
         chips = self.figgie.chips[player]
         if player == self.selling_player:
             return False, 'cannot buy from yourself'
-        if not self.is_seller():
+        if not self.has_seller():
             return False, 'no one has set an selling price'
         if chips < self.selling_price:
             return False, 'player only has {} chips'.format(chips)
@@ -242,10 +251,12 @@ class Market:
         self.figgie.chips[player] -= self.selling_price
         self.figgie.cards[player][self.suit.value] += 1
 
+        self.last_price_bought = self.selling_price
+
     def can_sell(self, player: int) -> tuple:
         if player is self.buying_player:
             return False, 'cannot sell to yourself'
-        if not self.is_buyer():
+        if not self.has_buyer():
             return False, 'no one has set a buying price'
         if self.figgie.chips[self.buying_player] < self.buying_price:
             return False, 'buying player only has {} chips'.format(self.figgie.chips[self.buying_player])
@@ -261,11 +272,12 @@ class Market:
 
         self.figgie.chips[self.buying_player] -= self.buying_price
         self.figgie.cards[self.buying_player][self.suit.value] += 1
+        self.last_price_sold = self.buying_price
 
-    def is_buyer(self) -> bool:
+    def has_buyer(self) -> bool:
         return self.buying_price is not None
 
-    def is_seller(self) -> bool:
+    def has_seller(self) -> bool:
         return self.selling_price is not None
 
     def clear(self):

@@ -24,6 +24,9 @@ class Agent:
         pass
 
     def reset(self) -> None:
+        pass
+
+    def clear(self) -> None:
         """
         Resets the agent's win statistics.
         """

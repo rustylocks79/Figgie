@@ -50,7 +50,6 @@ class ModularAgent(Agent):
         utils = np.full(4, 0, dtype=float)
         for suit in SUITS:
             card_util = round(agent.util_model.get_card_utility(figgie, player, suit))
-            # assert card_util > 0 TODO: redo the card util method to account for selling
             actual_util = round(agent.cheating_model.get_card_utility(figgie, player, suit))
             agent.add_prediction(card_util, actual_util)
             utils[suit.value] = card_util
@@ -88,7 +87,7 @@ class ModularAgent(Agent):
         best_suit = None
         for suit in SUITS:
             market = figgie.markets[suit.value]
-            if market.is_buyer():
+            if market.has_buyer():
                 if figgie.chips[player] > market.buying_price:
                     buy_adv = utils[suit.value] - (market.buying_price + 1) if (market.buying_price + 1) < utils[suit.value] else None
                 else:
@@ -97,7 +96,7 @@ class ModularAgent(Agent):
                 buy_adv = utils[suit.value]
 
             if figgie.cards[player][suit.value] >= 1:
-                if market.is_seller():
+                if market.has_seller():
                     sell_adv = (market.selling_price - 1) - utils[suit.value] if (market.selling_price - 1) > utils[suit.value] else None
                 else:
                     sell_adv = utils[suit.value]
@@ -178,7 +177,7 @@ class UtilSellPricer(SellPricer):
 class MarketBuyPricer(BuyPricer):
     def get_buying_price(self, figgie: Figgie, suit: Suit, card_util: int) -> int:
         market = figgie.markets[suit.value]
-        if market.is_buyer():
+        if market.has_buyer():
             return market.buying_price + 1
         else:
             return max(card_util - 1, 1)
@@ -187,7 +186,7 @@ class MarketBuyPricer(BuyPricer):
 class MarketSellPricer(SellPricer):
     def get_selling_price(self, figgie: Figgie, suit: Suit, card_util: int) -> int:
         market = figgie.markets[suit.value]
-        if market.is_seller():
+        if market.has_seller():
             return market.selling_price - 1
         else:
             return max(card_util + 1, 1)
@@ -196,24 +195,24 @@ class MarketSellPricer(SellPricer):
 class HalfBuyPricer(BuyPricer):
     def get_buying_price(self, figgie: Figgie, suit: Suit, card_util: int) -> int:
         market = figgie.markets[suit.value]
-        minimum = market.buying_price if market.is_buyer() else 0
+        minimum = market.buying_price if market.has_buyer() else 0
         return ((card_util - minimum) // 2) + minimum
 
 
 class HalfSellPricer(SellPricer):
     def get_selling_price(self, figgie: Figgie, suit: Suit, card_util: int) -> int:
         market = figgie.markets[suit.value]
-        maximum = market.selling_price if market.is_seller() else card_util * 2
+        maximum = market.selling_price if market.has_seller() else card_util * 2
         return maximum - ((maximum - card_util) // 2)
 
 
 class RandomBuyPricer(BuyPricer):
     def get_buying_price(self, figgie: Figgie, suit: Suit, card_util: int) -> int:
         market = figgie.markets[suit.value]
-        return randint(market.buying_price + 1 if market.is_buyer() else 1, card_util)
+        return randint(market.buying_price + 1 if market.has_buyer() else 1, card_util)
 
 
 class RandomSellPricer(SellPricer):
     def get_selling_price(self, figgie: Figgie, suit: Suit, card_util: int) -> int:
         market = figgie.markets[suit.value]
-        return randint(card_util + 1, market.selling_price - 1 if market.is_seller() else card_util * 2)
+        return randint(card_util + 1, market.selling_price - 1 if market.has_seller() else card_util * 2)

@@ -7,6 +7,7 @@ class SellAction(Action):
         super().__init__('sell', notes)
         self.suit = suit
         self.buyer = None
+        self.price = None
 
     def __str__(self):
         return 'agent {}: {} {}, {}'.format(self.index, self.operation, str(self.suit), self.notes)
