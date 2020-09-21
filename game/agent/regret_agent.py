@@ -77,7 +77,6 @@ class RegretAgent(Agent):
         self.transactions = np.full(4, 0, dtype=int)
 
     def get_configuration(self, figgie: Figgie):
-        player = figgie.active_player
         utils = ModularAgent.calc_card_utils(self, figgie)
         best_transaction = ModularAgent.get_best_transaction(figgie, utils)
         if best_transaction is not None:
@@ -175,7 +174,11 @@ class RegretAgent(Agent):
             probability = np.copy(strategy)
 
         action_index = np.random.choice(len(probability), p=probability)
-        figgie.preform(actions[action_index])
+        if figgie.can_preform(actions[action_index]):
+            figgie.preform(actions[action_index])
+        else:
+            figgie.preform(PassAction())
+            return self.__train(figgie, pi, pi_prime, training_player)
         self.on_action(figgie, player, actions[action_index])
         result = self.__train(figgie, pi * strategy[action_index], pi_prime * probability[action_index], training_player) if player == training_player else self.__train(figgie, pi, pi_prime, training_player)
         util = -result[0]

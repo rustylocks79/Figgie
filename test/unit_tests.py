@@ -8,6 +8,7 @@ from game.action.buy_action import BuyAction
 from game.action.pass_action import PassAction
 from game.action.sell_action import SellAction
 from game.figgie import Figgie, STARTING_CHIPS, SUITS
+from game.suit import Suit
 
 
 class Testing(unittest.TestCase):
@@ -94,3 +95,9 @@ class Testing(unittest.TestCase):
             self.assertEqual(self.game.cards[selling_player][suit.value], 1, 'card not properly subtracted')
             self.game.reset()
             self.game.cards = np.full((4, 4), 2, dtype=int)
+
+    def test_win(self):
+        self.game.goal_suit = Suit.SPADES
+        self.game.cards = np.array([[12, 0, 0, 0], [0, 10, 0, 0], [0, 0, 8, 0], [0, 0, 0, 10]])
+        results = self.game.get_utility()
+        self.assertEqual([250, 250, 250, 450], results.tolist())
