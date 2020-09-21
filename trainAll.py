@@ -10,7 +10,7 @@ from train import save
 def main():
     figgie = Figgie()
     parser = argparse.ArgumentParser(description='Train a strategy using CFR')
-    parser.add_argument('-t', '--trials', type=int, default=10_000, help='number of trials to run. ')
+    parser.add_argument('-t', '--trials', type=int, default=10000, help='number of trials to run. ')
 
     args = parser.parse_args()
     info_sets = [InfoSetH(), InfoSetT(), InfoSetL(), InfoSetHT(), InfoSetHL(), InfoSetTL(), InfoSetHTL()]
