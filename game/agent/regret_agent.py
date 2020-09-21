@@ -132,7 +132,12 @@ class RegretAgent(Agent):
         if info_set is None:  # Action chosen by market
             return actions
         elif info_set in self.game_tree:
-            return np.random.choice(actions, p=self.game_tree[info_set].get_trained_strategy())
+            percents = self.game_tree[info_set].get_trained_strategy()
+            action = np.random.choice(actions, p=percents)
+            if figgie.can_preform(action):
+                return action
+            else:
+                return PassAction()
         else:
             self.unknown_states += 1
             return self.default_agent.get_action(figgie)

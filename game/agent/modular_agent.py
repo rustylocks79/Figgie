@@ -144,17 +144,23 @@ class ModularAgent(Agent):
             market = figgie.markets[best_suit.value]
             if best_action == 'bid':
                 bidding_price = int(self.buy_pricer.get_buying_price(figgie, best_suit, utils[best_suit.value]))
-                assert market.can_bid(player, bidding_price)[0], market.can_bid(player, bidding_price)[1]
-                return BidAction(best_suit, bidding_price)
+                if market.can_bid(player, bidding_price)[0]:
+                    return BidAction(best_suit, bidding_price)
+                else:
+                    return PassAction()
             elif best_action == 'ask':
                 asking_price = int(self.sell_pricer.get_selling_price(figgie, best_suit, utils[best_suit.value]))
-                assert market.can_ask(player, asking_price)[0], market.can_ask(player, asking_price)[1]
-                return AskAction(best_suit, asking_price)
+                if market.can_ask(player, asking_price)[0]:
+                    return AskAction(best_suit, asking_price)
+                else:
+                    return PassAction()
             elif best_action == 'at':
                 bidding_price = int(self.buy_pricer.get_buying_price(figgie, best_suit, utils[best_suit.value]))
                 asking_price = int(self.sell_pricer.get_selling_price(figgie, best_suit, utils[best_suit.value]))
-                assert market.can_at(player, bidding_price, asking_price)[0], market.can_at(player, bidding_price, asking_price)[1]
-                return AtAction(best_suit, bidding_price, asking_price)
+                if market.can_at(player, bidding_price, asking_price)[0]:
+                    return AtAction(best_suit, bidding_price, asking_price)
+                else:
+                    return PassAction()
             else:
                 raise ValueError('Best action can not be: {}'.format(best_action))
 

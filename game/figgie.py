@@ -70,6 +70,24 @@ class Figgie:
                 suit = deck.pop()
                 self.cards[i][suit.value] += 1
 
+    def can_preform(self, action) -> bool:
+        player = self.active_player
+        market = self.markets[action.suit.value]
+        if action.operation == 'ask':
+            return market.can_ask(player, action.selling_price)[0]
+        elif action.operation == 'bid':
+            return market.can_bid(player, action.buying_price)[0]
+        elif action.operation == 'buy':
+            return market.can_buy(player)
+        elif action.operation == 'sell':
+            return market.can_sell(player)
+        elif action.operation == 'at':
+            return market.can_at(player, action.buying_price, action.selling_price)
+        elif action.operation == 'pass':
+            return True
+        else:
+            raise ValueError('Unknown operation: {}'.format(action.operation))
+
     def preform(self, action) -> None:
         """
         :param action: the string action to be preformed
@@ -145,6 +163,7 @@ class Figgie:
             while not self.is_finished():
                 player = self.active_player
                 action = agents[player].get_action(self)
+                agents[player].add_operation(action)
                 self.preform(action)
                 if verbose:
                     print(str(action))
