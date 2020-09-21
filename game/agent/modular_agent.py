@@ -56,7 +56,7 @@ class ModularAgent(Agent):
         return utils
 
     @staticmethod
-    def get_best_transaction(figgie: Figgie, utils: np.ndarray) -> tuple:
+    def get_best_transaction(figgie: Figgie, utils: np.ndarray):
         player = figgie.active_player
         best_action = None
         best_adv = 0
@@ -76,8 +76,22 @@ class ModularAgent(Agent):
                     best_action = 'sell'
                     best_adv = sell_adv
                     best_suit = suit
-                    
-            return best_action, best_adv, best_suit
+
+        if best_action is None:
+            return None
+        else:
+            player = figgie.active_player
+            market = figgie.markets[best_suit.value]
+            if best_action == 'buy':
+                assert market.can_buy(player)[0], market.can_buy(player)[1]
+                return BuyAction(best_suit,
+                                 notes='with exp util: {}, adv: {}'.format(utils[best_suit.value], best_adv))
+            elif best_action == 'sell':
+                assert market.can_sell(player)[0], market.can_sell(player)[1]
+                return SellAction(best_suit,
+                                  notes='with exp util: {}, adv: {}'.format(utils[best_suit.value], best_adv))
+            else:
+                raise ValueError('Best action can not be: {}'.format(best_action))
 
     @staticmethod
     def get_best_market_adv(figgie: Figgie, utils: np.ndarray) -> tuple:
@@ -124,19 +138,10 @@ class ModularAgent(Agent):
 
     def get_action(self, figgie: Figgie) -> Action:
         utils = self.calc_card_utils(self, figgie)
-        best_action, best_adv, best_suit = self.get_best_transaction(figgie, utils)
+        best_transaction = self.get_best_transaction(figgie, utils)
         
-        if best_action is not None:
-            player = figgie.active_player
-            market = figgie.markets[best_suit.value]
-            if best_action == 'buy':
-                assert market.can_buy(player)[0], market.can_buy(player)[1]
-                return BuyAction(best_suit, notes='with exp util: {}, adv: {}'.format(utils[best_suit.value], best_adv))
-            elif best_action == 'sell':
-                assert market.can_sell(player)[0], market.can_sell(player)[1]
-                return SellAction(best_suit, notes='with exp util: {}, adv: {}'.format(utils[best_suit.value], best_adv))
-            else:
-                raise ValueError('Best action can not be: {}'.format(best_action))
+        if best_transaction is not None:
+            return best_transaction
 
         best_action, best_adv, best_suit = self.get_best_market_adv(figgie, utils)
         if best_action is not None:

@@ -21,8 +21,9 @@ def play(game: Figgie, agents: list, games: int, verbose=False):
         print('\twins: {}'.format(agent.wins))
         print('\tavg. utility: {}, total utility: {}'.format(agent.total_utility / games, agent.total_utility))
         print('\trmse of model: {}'.format(agent.get_rmse()))
-        print('\toperations: {}'.format(agent.operations))
-        print('\tavg. operations: {}'.format(agent.get_operation_percents()))
+        print('\toperations: {}'.format({key: agent.operations[key] for key in sorted(agent.operations)}))
+        percentOperations = agent.get_operation_percents()
+        print('\tavg. operations: {}'.format({key: percentOperations[key] for key in sorted(percentOperations)}))
         if isinstance(agent, RegretAgent):
             print('\tavg unknown states: {}, unknown states: {}'.format(agent.unknown_states / games, agent.unknown_states))
 

@@ -4,9 +4,7 @@ from game.action.action import Action
 from game.action.ask_action import AskAction
 from game.action.at_action import AtAction
 from game.action.bid_action import BidAction
-from game.action.buy_action import BuyAction
 from game.action.pass_action import PassAction
-from game.action.sell_action import SellAction
 from game.agent.agent import Agent
 from game.agent.modular_agent import ModularAgent
 from game.figgie import Figgie, NUM_PLAYERS
@@ -80,20 +78,10 @@ class RegretAgent(Agent):
 
     def get_configuration(self, figgie: Figgie):
         player = figgie.active_player
-        hand = figgie.cards[player]
         utils = ModularAgent.calc_card_utils(self, figgie)
-        best_action, best_adv, best_suit = ModularAgent.get_best_transaction(figgie, utils)
-        if best_action is not None:
-            player = figgie.active_player
-            market = figgie.markets[best_suit.value]
-            if best_action == 'buy':
-                assert market.can_buy(player)[0], market.can_buy(player)[1]
-                return None, BuyAction(best_suit, notes='with exp util: {}, adv: {}'.format(utils[best_suit.value], best_adv))
-            elif best_action == 'sell':
-                assert market.can_sell(player)[0], market.can_sell(player)[1]
-                return None, SellAction(best_suit, notes='with exp util: {}, adv: {}'.format(utils[best_suit.value], best_adv))
-            else:
-                raise ValueError('Best action can not be: {}'.format(best_action))
+        best_transaction = ModularAgent.get_best_transaction(figgie, utils)
+        if best_transaction is not None:
+            return None, best_transaction
 
         best_action, best_adv, best_suit = ModularAgent.get_best_market_adv(figgie, utils)
         if best_action is not None:
