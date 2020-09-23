@@ -22,6 +22,7 @@ def main():
         game_tree, trials, model, info_set = load(args.start)
     else:
         game_tree = {}
+        trials = 0
         info_set = util.info_sets[args.generator]
 
     agent = RegretAgent(SimpleModel(), info_set, ModularAgent(SimpleModel(), RandomBuyPricer(), RandomSellPricer()), game_tree=game_tree)
@@ -46,7 +47,7 @@ def main():
         print('\t\tinfo sets: {}'.format(len(agent.game_tree)))
 
         start_time = time.process_time()
-        file_name = util.save(agent.game_tree, args.trials * i, 'simple_{}'.format(args.generator))
+        file_name = util.save(agent.game_tree, trials + args.trials * i, 'simple', info_set.name)
         total_time = time.process_time() - start_time
         print('\tSaving to {} took {} seconds'.format(file_name, total_time))
 
