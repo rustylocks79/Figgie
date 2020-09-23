@@ -74,7 +74,10 @@ class RegretAgent(Agent):
         self.util_model = util_model
         self.info_set_generator = info_set_generator
         self.default_agent = default_agent
-        self.transactions = np.full(4, 0, dtype=int)
+
+    def reset(self) -> None:
+        super().reset()
+        self.util_model.reset()
 
     def get_configuration(self, figgie: Figgie):
         utils = ModularAgent.calc_card_utils(self, figgie)
@@ -131,15 +134,6 @@ class RegretAgent(Agent):
 
     def on_action(self, figgie: Figgie, index: int, action: Action) -> None:
         self.util_model.on_action(figgie, index, action)
-        if not isinstance(action, PassAction):
-            self.transactions[action.suit.value] += 1
-
-    def reset(self) -> None:
-        self.transactions = np.full(4, 0, dtype=int)
-
-    def clear(self) -> None:
-        super().clear()
-        self.unknown_states = 0
 
     def train(self, game: Figgie, trials: int):
         for i in range(trials):

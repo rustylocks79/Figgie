@@ -33,7 +33,8 @@ class Figgie:
         """
         self.deal()
         self.chips = np.full(NUM_PLAYERS, STARTING_CHIPS, dtype=int)
-        self.clear_markets()
+        for market in self.markets:
+            market.reset()
         self.__new_queue()
         self.active_player = self.queue.get()
         self.round = 0
@@ -197,6 +198,22 @@ class Market:
         self.figgie = figgie
         self.last_price_sold = None
         self.last_price_bought = None
+        self.transactions = 0
+
+    def reset(self) -> None:
+        """
+        Resets the market to it's initial state. This should be done at the end of each trial.
+        """
+        self.clear()
+        self.last_price_sold = None
+        self.last_price_bought = None
+        self.transactions = 0
+
+    def clear(self):
+        self.buying_price = None
+        self.buying_player = None
+        self.selling_price = None
+        self.selling_player = None
 
     def can_ask(self, player: int, amount: int) -> tuple:
         """
@@ -214,7 +231,9 @@ class Market:
         return True, 'success'
 
     def ask(self, player: int, amount: int) -> None:
-        assert self.can_ask(player, amount)[0], 'player {} can not ask {} for {} because {}'.format(player, amount, self.suit.name, self.can_ask(player, amount)[1])
+        can, reason = self.can_ask(player, amount)
+        if not can:
+            raise ValueError('player {} can not ask {} for {} because {}'.format(player, amount, self.suit.name, reason))
         self.selling_price = amount
         self.selling_player = player
 
@@ -229,7 +248,9 @@ class Market:
         return True, 'success'
 
     def bid(self, player: int, amount: int) -> None:
-        assert self.can_bid(player, amount)[0], 'player {} can not bid {} for {} because {}. '.format(player, amount, self.suit.name, self.can_bid(player, amount)[1])
+        can, reason = self.can_bid(player, amount)
+        if not can:
+            raise ValueError('player {} can not bid {} for {} because {}. '.format(player, amount, self.suit.name, reason))
         self.buying_price = amount
         self.buying_player = player
 
@@ -245,7 +266,9 @@ class Market:
         return True, 'success'
 
     def at(self, player: int, buying_price: int, selling_price: int) -> None:
-        assert self.can_at(player, buying_price, selling_price)[0], 'player {} can not {} at {} because {}'.format(player, buying_price, selling_price, self.can_at(player, buying_price, selling_price)[1])
+        can, reason = self.can_at(player, buying_price, selling_price)
+        if not can:
+            raise ValueError('player {} can not {} at {} because {}'.format(player, buying_price, selling_price, reason))
         self.bid(player, buying_price)
         self.ask(player, selling_price)
 
@@ -262,7 +285,9 @@ class Market:
         return True, 'success'
 
     def buy(self, player: int) -> None:
-        assert self.can_buy(player), 'Player {} can buy {} from {} because {}'.format(player, self.suit.name, self.selling_player, self.can_buy(player)[1])
+        can, reason = self.can_buy(player)
+        if not can:
+            raise ValueError('player {} can buy {} from {} because {}'.format(player, self.suit.name, self.selling_player, reason))
 
         self.figgie.chips[self.selling_player] += self.selling_price
         self.figgie.cards[self.selling_player][self.suit.value] -= 1
@@ -271,6 +296,7 @@ class Market:
         self.figgie.cards[player][self.suit.value] += 1
 
         self.last_price_bought = self.selling_price
+        self.transactions += 1
 
     def can_sell(self, player: int) -> tuple:
         if player is self.buying_player:
@@ -284,23 +310,21 @@ class Market:
         return True, 'success'
 
     def sell(self, player: int):
-        assert self.can_sell(player), 'player {} can not sell {} to player {} because {}'.format(player, self.suit.name, self.buying_player, self.can_sell(player)[1])
+        can, reason = self.can_sell(player)
+        if not can:
+            raise ValueError('player {} can not sell {} to player {} because {}'.format(player, self.suit.name, self.buying_player, reason))
 
         self.figgie.chips[player] += self.buying_price
         self.figgie.cards[player][self.suit.value] -= 1
 
         self.figgie.chips[self.buying_player] -= self.buying_price
         self.figgie.cards[self.buying_player][self.suit.value] += 1
+
         self.last_price_sold = self.buying_price
+        self.transactions += 1
 
     def has_buyer(self) -> bool:
         return self.buying_price is not None
 
     def has_seller(self) -> bool:
         return self.selling_price is not None
-
-    def clear(self):
-        self.buying_price = None
-        self.buying_player = None
-        self.selling_price = None
-        self.selling_player = None

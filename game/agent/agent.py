@@ -33,16 +33,6 @@ class Agent:
     def reset(self) -> None:
         pass
 
-    def clear(self) -> None:
-        """
-        Resets the agent's win statistics.
-        """
-        self.wins = 0
-        self.total_utility = 0
-        self.total_error = 0
-        self.operations = {}
-        self.trails += 0
-
     def add_prediction(self, model_prediction, actual) -> None:
         self.total_error += pow(actual - model_prediction, 2)
         self.trails += 1

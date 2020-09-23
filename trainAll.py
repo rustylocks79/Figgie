@@ -4,7 +4,7 @@ import time
 from game.agent.info_sets import *
 from game.agent.modular_agent import RandomBuyPricer, RandomSellPricer
 from game.model.simple_model import SimpleModel
-from train import save
+from util import save
 
 
 def main():

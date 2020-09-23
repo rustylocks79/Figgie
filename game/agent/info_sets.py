@@ -47,8 +47,8 @@ class InfoSetT(StandardGenerator):
         super().__init__('t')
 
     def generate_info_set(self, action: str, suit: Suit, figgie: Figgie, agent: Agent, util: float):
-        transactions = str(agent.transactions[suit.value])
-        return super().generate_info_set(action, suit, figgie, agent, util) + ',' + transactions
+        market = figgie.markets[suit.value]
+        return super().generate_info_set(action, suit, figgie, agent, util) + ',' + str(market.transactions)
 
 
 class InfoSetL(StandardGenerator):
@@ -65,9 +65,9 @@ class InfoSetHT(StandardGenerator):
         super().__init__('ht')
 
     def generate_info_set(self, action: str, suit: Suit, figgie: Figgie, agent: Agent, util: float):
+        market = figgie.markets[suit.value]
         hand = str(figgie.cards[figgie.active_player])
-        transactions = str(agent.transactions[suit.value])
-        return super().generate_info_set(action, suit, figgie, agent, util) + ',' + hand[suit.value] + ',' + transactions
+        return super().generate_info_set(action, suit, figgie, agent, util) + ',' + hand[suit.value] + ',' + str(market.transactions)
 
 
 class InfoSetHL(StandardGenerator):
@@ -85,9 +85,9 @@ class InfoSetTL(StandardGenerator):
         super().__init__('tl')
 
     def generate_info_set(self, action: str, suit: Suit, figgie: Figgie, agent: Agent, util: float):
-        transactions = str(agent.transactions[suit.value])
+        market = figgie.markets[suit.value]
         last_transaction = get_last_transaction(figgie, action, suit)
-        return super().generate_info_set(action, suit, figgie, agent, util) + ',' + transactions + ',' + last_transaction
+        return super().generate_info_set(action, suit, figgie, agent, util) + ',' + str(market.transactions) + ',' + last_transaction
 
 
 class InfoSetHTL(StandardGenerator):
@@ -95,7 +95,7 @@ class InfoSetHTL(StandardGenerator):
         super().__init__('htl')
 
     def generate_info_set(self, action: str, suit: Suit, figgie: Figgie, agent: Agent, util: float):
+        market = figgie.markets[suit.value]
         hand = str(figgie.cards[figgie.active_player])
-        transactions = str(agent.transactions[suit.value])
         last_transaction = get_last_transaction(figgie, action, suit)
-        return super().generate_info_set(action, suit, figgie, agent, util) + ',' + hand + ',' + transactions + ',' + last_transaction
+        return super().generate_info_set(action, suit, figgie, agent, util) + ',' + hand + ',' + str(market.transactions) + ',' + last_transaction

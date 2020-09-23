@@ -44,6 +44,10 @@ class ModularAgent(Agent):
         self.buy_pricer = buy_pricer
         self.sell_pricer = sell_pricer
 
+    def reset(self) -> None:
+        super().reset()
+        self.util_model.reset()
+
     @staticmethod
     def calc_card_utils(agent: Agent, figgie: Figgie) -> np.ndarray:
         player = figgie.active_player
