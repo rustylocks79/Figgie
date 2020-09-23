@@ -26,7 +26,7 @@ def load(file_name: str) -> tuple:
 
 
 def save(strategy: dict, trials: int, model: str, info_set: str) -> str:
-    file_name = 'strategies/strat_{}_{}_().pickle'.format(trials, model, info_set)
+    file_name = 'strategies/strat_{}_{}_{}.pickle'.format(trials, model, info_set)
     with open(file_name, 'wb') as file:
         pickle.dump(strategy, file)
     return file_name
