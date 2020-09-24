@@ -31,7 +31,6 @@ class CheatingModel(UtilityModel):
     def get_expected_from_pot(self, figgie, cards) -> float:
         player = figgie.active_player
         cards_in_goal_suit = sum(figgie.cards[i][figgie.goal_suit.value] for i in range(4))
-        # assert cards_in_goal_suit == 8 or cards_in_goal_suit == 10, 'cards in goal suit must equal 8 or 10'
         max_goal_cards = max(cards[i][figgie.goal_suit.value] for i in range(NUM_PLAYERS))
         winners = [j for j in range(NUM_PLAYERS) if cards[j][figgie.goal_suit.value] == max_goal_cards]
         if player in winners:

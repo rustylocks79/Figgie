@@ -1,9 +1,6 @@
 import numpy as np
 
 from game.action.action import Action
-from game.action.ask_action import AskAction
-from game.action.at_action import AtAction
-from game.action.bid_action import BidAction
 from game.action.pass_action import PassAction
 from game.agent.agent import Agent
 from game.agent.modular_agent import ModularAgent
@@ -15,7 +12,27 @@ class InfoSetGenerator:
     def __init__(self, name):
         self.name = name
 
-    def generate_info_set(self, action: str, suit: Suit, figgie: Figgie, agent: Agent, util: float):
+    def generate_info_set(self, figgie: Figgie, card_util: float, target_operation: str, target_suit: Suit):
+        pass
+
+    def generate_actions(self, figgie: Figgie, card_util: float, target_operation: str, target_suit: Suit) -> list:
+        market = figgie.markets[target_suit.value]
+        if target_operation == 'bid':
+            return self.generate_bid_actions(card_util, market.buying_price, target_suit)
+        elif target_operation == 'ask':
+            return self.generate_ask_actions(card_util, market.selling_price, target_suit)
+        elif target_operation == 'at':
+            return self.generate_at_actions(card_util, market.buying_price, market.selling_price, target_suit)
+        else:
+            raise ValueError('Best action can not be: {}'.format(target_suit))
+
+    def generate_bid_actions(self, card_util: float, buying_price: int, target_suit: Suit) -> list:
+        pass
+
+    def generate_ask_actions(self, card_util: float, selling_price: int, target_suit: Suit) -> list:
+        pass
+
+    def generate_at_actions(self, card_util: float, buying_price: int, selling_price: int, target_suit: Suit) -> list:
         pass
 
 
@@ -87,33 +104,10 @@ class RegretAgent(Agent):
 
         best_action, best_adv, best_suit = ModularAgent.get_best_market_adv(figgie, utils)
         if best_action is not None:
-            market = figgie.markets[best_suit.value]
-            info_set = self.info_set_generator.generate_info_set(best_action, best_suit, figgie, self, utils[best_suit.value])
-            if best_action == 'bid':
-                actions = []
-                min_buy = market.buying_price + 1 if market.buying_price is not None else 1
-                for i in range(min_buy, min_buy + 8):
-                    actions.append(BidAction(best_suit, i))
-                assert len(actions) != 0, 'Length of actions == 0'
-                return info_set, actions
-            elif best_action == 'ask':
-                actions = []
-                max_sell = market.selling_price if market.selling_price is not None else int(utils[best_suit.value] * 2)
-                for i in range(max(max_sell - 8, 1), max_sell):
-                    actions.append(AskAction(best_suit, i))
-                assert len(actions) != 0, 'Length of actions == 0'
-                return info_set, actions
-            elif best_action == 'at':
-                actions = []
-                min_buy = market.buying_price + 1 if market.has_buyer() else 1
-                max_sell = market.selling_price if market.has_seller() else int(utils[best_suit.value]) + 8
-                for i in range(min_buy, min_buy + 8):
-                    for j in range(max(max_sell - 8, i + 1), max_sell):
-                        actions.append(AtAction(best_suit, i, j))
-                assert len(actions) != 0, 'Length of actions == 0'
-                return info_set, actions
-            else:
-                raise ValueError('Best action can not be: {}'.format(best_action))
+            info_set = self.info_set_generator.generate_info_set(figgie, utils[best_suit.value], best_action, best_suit)
+            actions = self.info_set_generator.generate_actions(figgie, utils[best_suit.value], best_action, best_suit)
+            assert len(actions) != 0, 'Length of actions == 0'
+            return info_set, actions
 
         return None, PassAction()
 
