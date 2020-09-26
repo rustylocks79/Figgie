@@ -33,8 +33,6 @@ def main():
     print('\ttrials: {}'.format(args.trials))
     print()
 
-    # TODO: add initial trials
-
     for i in range(1, args.iterations + 1):
         print('Iteration: {}'.format(i))
 

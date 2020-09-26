@@ -1,6 +1,7 @@
 import argparse
 import time
 
+import util
 from game.agent.info_sets import *
 from game.agent.modular_agent import RandomBuyPricer, RandomSellPricer
 from game.model.simple_model import SimpleModel
@@ -13,8 +14,7 @@ def main():
     parser.add_argument('-t', '--trials', type=int, default=10000, help='number of trials to run. ')
 
     args = parser.parse_args()
-    info_sets = [InfoSetH(), InfoSetT(), InfoSetL(), InfoSetHT(), InfoSetHL(), InfoSetTL(), InfoSetHTL()]
-    for info_set in info_sets:
+    for info_set in util.info_sets.values():
         agent = RegretAgent(SimpleModel(), info_set, ModularAgent(SimpleModel(), RandomBuyPricer(), RandomSellPricer()))
 
         print('Parameters: ')
