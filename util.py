@@ -9,7 +9,8 @@ models = {
     'cheating': CheatingModel()
 }
 
-info_sets = {'h': InfoSetH(),
+info_sets = {'std': StandardGenerator('std'),
+             'h': InfoSetH(),
              't': InfoSetT(),
              'l': InfoSetL(),
              'ht': InfoSetHT(),

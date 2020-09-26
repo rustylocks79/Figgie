@@ -107,7 +107,8 @@ class ModularAgent(Agent):
             market = figgie.markets[suit.value]
             if market.has_buyer():
                 if figgie.chips[player] > market.buying_price:
-                    buy_adv = utils[suit.value] - (market.buying_price + 1) if (market.buying_price + 1) < utils[suit.value] else None
+                    max_useful_price = min(utils[suit.value], figgie.chips[player])
+                    buy_adv = max_useful_price - (market.buying_price + 1) if (market.buying_price + 1) < max_useful_price else None
                 else:
                     buy_adv = None
             else:

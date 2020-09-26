@@ -1,23 +1,23 @@
 from game.figgie import Figgie
 from game.model.utility_model import UtilityModel
-from game.suit import Suit
+from game.suit import Suit, SUITS
 
 PROBABILITY_8_CARD_GOAL_SUIT = .33
 PROBABILITY_10_CARD_GOAL_SUIT = .67
-CHANCE_TO_WIN = .5  # TODO: .5 is an arbitrary value
 
 
 class SimpleModel(UtilityModel):
 
     def get_card_utility(self, figgie: Figgie, index: int, suit: Suit) -> float:
         hand = figgie.cards[index]
-        if hand[suit.opposite().value] > 10:
-            result = 10 + (self.get_expected_from_pot(hand[suit.value + 1]) - self.get_expected_from_pot(suit.value))
-        else:
-            if hand[suit.value] > 10:
-                result = 0
-            else:
-                result = .25 * (10 + (self.get_expected_from_pot(hand[suit.value] + 1) - self.get_expected_from_pot(suit.value)))
+        for s in SUITS:
+            if hand[s.value] > 10:
+                if s.opposite.value == suit.value:
+                    return 10 + (self.get_expected_from_pot(hand[suit.value + 1]) - self.get_expected_from_pot(suit.value))
+                else:
+                    return 0
+
+        result = .25 * (10 + (self.get_expected_from_pot(hand[suit.value] + 1) - self.get_expected_from_pot(suit.value)))
         return max(result, 0)
 
     @staticmethod
