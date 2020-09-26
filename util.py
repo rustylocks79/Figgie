@@ -10,13 +10,9 @@ models = {
 }
 
 info_sets = {'std': StandardGenerator('std'),
-             'h': InfoSetH(),
              't': InfoSetT(),
              'l': InfoSetL(),
-             'ht': InfoSetHT(),
-             'hl': InfoSetHL(),
-             'tl': InfoSetTL(),
-             'htl': InfoSetHTL()}
+             'tl': InfoSetTL()}
 
 
 def load(file_name: str) -> tuple:

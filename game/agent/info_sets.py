@@ -25,13 +25,14 @@ class StandardGenerator(InfoSetGenerator):
 
     def generate_info_set(self, figgie: Figgie, card_util: float, target_operation: str, target_suit: Suit):
         market = figgie.markets[target_suit.value]
+        hand = figgie.cards[figgie.active_player]
         if target_operation == 'bid':
-            return 'bid,{},{}'.format(card_util, market.buying_price if market.has_buyer() else 'N')
+            return 'bid,{},{},{}'.format(card_util, market.buying_price if market.has_buyer() else 'N', str(hand[target_suit.value]))
         elif target_operation == 'ask':
-            return 'ask,{},{}'.format(card_util, market.selling_price if market.has_seller() else 'N')
+            return 'ask,{},{},{}'.format(card_util, market.selling_price if market.has_seller() else 'N', str(hand[target_suit.value]))
         elif target_operation == 'at':
-            return 'at,{},{},{}'.format(card_util, market.buying_price if market.has_buyer() else 'N',
-                                        market.selling_price if market.has_seller() else 'N')
+            return 'at,{},{},{},{}'.format(card_util, market.buying_price if market.has_buyer() else 'N',
+                                        market.selling_price if market.has_seller() else 'N', str(hand[target_suit.value]))
         else:
             raise ValueError("Invalid action: {}".format(target_operation))
 
@@ -59,15 +60,6 @@ class StandardGenerator(InfoSetGenerator):
         return actions
 
 
-class InfoSetH(StandardGenerator):
-    def __init__(self):
-        super().__init__('h')
-
-    def generate_info_set(self, figgie: Figgie, card_util: float, target_operation: str, target_suit: Suit):
-        hand = str(figgie.cards[figgie.active_player])
-        return super().generate_info_set(figgie, card_util, target_operation, target_suit) + ',' + hand[target_suit.value]
-
-
 class InfoSetT(StandardGenerator):
     def __init__(self):
         super().__init__('t')
@@ -86,26 +78,6 @@ class InfoSetL(StandardGenerator):
         return super().generate_info_set(figgie, card_util, target_operation, target_suit) + ',' + last_transaction
 
 
-class InfoSetHT(StandardGenerator):
-    def __init__(self):
-        super().__init__('ht')
-
-    def generate_info_set(self, figgie: Figgie, card_util: float, target_operation: str, target_suit: Suit):
-        market = figgie.markets[target_suit.value]
-        hand = str(figgie.cards[figgie.active_player])
-        return super().generate_info_set(figgie, card_util, target_operation, target_suit) + ',' + hand[target_suit.value] + ',' + str(market.transactions)
-
-
-class InfoSetHL(StandardGenerator):
-    def __init__(self):
-        super().__init__('hl')
-
-    def generate_info_set(self, figgie: Figgie, card_util: float, target_operation: str, target_suit: Suit):
-        hand = str(figgie.cards[figgie.active_player])
-        last_transaction = get_last_transaction(figgie, target_operation, target_suit)
-        return super().generate_info_set(figgie, card_util, target_operation, target_suit) + ',' + hand + ',' + last_transaction
-
-
 class InfoSetTL(StandardGenerator):
     def __init__(self):
         super().__init__('tl')
@@ -114,14 +86,3 @@ class InfoSetTL(StandardGenerator):
         market = figgie.markets[target_suit.value]
         last_transaction = get_last_transaction(figgie, target_operation, target_suit)
         return super().generate_info_set(figgie, card_util, target_operation, target_suit) + ',' + str(market.transactions) + ',' + last_transaction
-
-
-class InfoSetHTL(StandardGenerator):
-    def __init__(self):
-        super().__init__('htl')
-
-    def generate_info_set(self, figgie: Figgie, card_util: float, target_operation: str, target_suit: Suit):
-        market = figgie.markets[target_suit.value]
-        hand = str(figgie.cards[figgie.active_player])
-        last_transaction = get_last_transaction(figgie, target_operation, target_suit)
-        return super().generate_info_set(figgie, card_util, target_operation, target_suit) + ',' + hand + ',' + str(market.transactions) + ',' + last_transaction
