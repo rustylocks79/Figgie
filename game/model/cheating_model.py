@@ -4,6 +4,9 @@ from game.suit import Suit
 
 
 class CheatingModel(UtilityModel):
+    def __init__(self):
+        super().__init__('cheating')
+
     def get_card_utility(self, figgie: Figgie, index: int, suit: Suit) -> float:
         player = figgie.active_player
         hand = figgie.cards[player]

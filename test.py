@@ -8,9 +8,9 @@ from game.model.simple_model import SimpleModel
 from util import load
 
 
-def test(game: Figgie, agents: list, games: int, verbose=False):
+def test(game: Figgie, agents: list, trials: int, verbose=False):
     start_time = time.process_time()
-    game.play(agents, games, verbose=verbose)
+    game.play(agents, trials, verbose=verbose)
     total_time = time.process_time() - start_time
     print('Testing took {} seconds'.format(total_time))
 
@@ -18,13 +18,13 @@ def test(game: Figgie, agents: list, games: int, verbose=False):
     for i, agent in enumerate(agents):
         print('agent {}: ({})'.format(i, type(agent)))
         print('\twins: {}'.format(agent.wins))
-        print('\tavg. utility: {}, total utility: {}'.format(agent.total_utility / games, agent.total_utility))
+        print('\tavg. utility: {}, total utility: {}'.format(agent.total_utility / trials, agent.total_utility))
         print('\trmse of model: {}'.format(agent.get_rmse()))
         print('\toperations: {}'.format({key: agent.operations[key] for key in sorted(agent.operations)}))
-        percentOperations = agent.get_operation_percents()
-        print('\tpercent operations: {}'.format({key: percentOperations[key] for key in sorted(percentOperations)}))
+        avg_operations = agent.get_avg_operations(trials)
+        print('\tavg. operations: {}'.format({key: avg_operations[key] for key in sorted(avg_operations)}))
         if isinstance(agent, RegretAgent):
-            print('\tavg unknown states: {}, unknown states: {}'.format(agent.unknown_states / games, agent.unknown_states))
+            print('\tavg unknown states: {}, unknown states: {}'.format(agent.unknown_states / trials, agent.unknown_states))
 
 
 def main():
@@ -42,7 +42,7 @@ def main():
     game_tree, trials, model, info_set = load(args.strategy)
     print('\t\tnum info sets: {}'.format(len(game_tree)))
     print('\t\ttrials trained: {}'.format(trials))
-    print('\t\tmodel: {}'.format(model))
+    print('\t\tmodel: {}'.format(model.name))
     print('\t\tinfo set generator: {}'.format(info_set.name))
 
     agents = [ModularAgent(SimpleModel(), MarketBuyPricer(), MarketSellPricer()),

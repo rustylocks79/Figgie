@@ -42,11 +42,10 @@ class Agent:
             return 0
         return sqrt(self.total_error / self.trails)
 
-    def get_operation_percents(self) -> dict:
+    def get_avg_operations(self, trials) -> dict:
         result = {}
-        total = sum(self.operations.values())
         for key in self.operations:
-            result[key] = self.operations[key] / total
+            result[key] = self.operations[key] / trials
         return result
 
 

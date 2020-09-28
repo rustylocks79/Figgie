@@ -7,7 +7,11 @@ from game.suit import Suit, SUITS
 PROBABILITY_8_CARD_GOAL_SUIT = .33
 PROBABILITY_10_CARD_GOAL_SUIT = .67
 
+
 class SimpleModel(UtilityModel):
+    def __init__(self):
+        super().__init__('simple')
+
     def get_card_utility(self, figgie: Figgie, index: int, suit: Suit) -> float:
         hand = figgie.cards[index]
         for s in SUITS:

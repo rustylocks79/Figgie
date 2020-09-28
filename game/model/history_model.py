@@ -10,6 +10,7 @@ from game.suit import SUITS, Suit
 class HistoryModel(UtilityModel):
 
     def __init__(self):
+        super().__init__('history')
         self.seen = np.full((4, 5), 0, dtype=int)
         for i in range(4):
             self.seen[i][4] = 10
