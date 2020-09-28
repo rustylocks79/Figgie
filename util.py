@@ -10,8 +10,11 @@ models = {
 }
 
 info_sets = {'std': StandardGenerator('std'),
+             'h': InfoSetH(),
              't': InfoSetT(),
              'l': InfoSetL(),
+             'ht': InfoSetHT(),
+             'hl': InfoSetHL(),
              'tl': InfoSetTL()}
 
 
