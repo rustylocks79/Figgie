@@ -23,7 +23,7 @@ class StandardGenerator(InfoSetGenerator):
     def __init__(self, name):
         super().__init__(name)
 
-    def generate_info_set(self, figgie: Figgie, card_util: float, target_operation: str, target_suit: Suit):
+    def generate_info_set(self, figgie: Figgie, card_util: int, target_operation: str, target_suit: Suit):
         market = figgie.markets[target_suit.value]
         hand = figgie.cards[figgie.active_player]
         if target_operation == 'bid':
@@ -36,21 +36,21 @@ class StandardGenerator(InfoSetGenerator):
         else:
             raise ValueError("Invalid action: {}".format(target_operation))
 
-    def generate_bid_actions(self, card_util: float, buying_price: int, target_suit: Suit) -> list:
+    def generate_bid_actions(self, card_util: int, buying_price: int, target_suit: Suit) -> list:
         actions = []
         min_buy = buying_price + 1 if buying_price is not None else 1
         for i in range(min_buy, min_buy + 8):
             actions.append(BidAction(target_suit, i))
         return actions
 
-    def generate_ask_actions(self, card_util: float, selling_price: int, target_suit: Suit) -> list:
+    def generate_ask_actions(self, card_util: int, selling_price: int, target_suit: Suit) -> list:
         actions = []
         max_sell = selling_price if selling_price is not None else int(card_util) + 8
         for i in range(max(max_sell - 8, 1), max_sell):
             actions.append(AskAction(target_suit, i))
         return actions
 
-    def generate_at_actions(self, card_util: float, buying_price: int, selling_price: int, target_suit: Suit):
+    def generate_at_actions(self, card_util: int, buying_price: int, selling_price: int, target_suit: Suit):
         actions = []
         min_buy = buying_price + 1 if buying_price is not None else 1
         max_sell = selling_price if selling_price is not None else int(card_util) + 8
@@ -64,7 +64,7 @@ class InfoSetT(StandardGenerator):
     def __init__(self):
         super().__init__('t')
 
-    def generate_info_set(self, figgie: Figgie, card_util: float, target_operation: str, target_suit: Suit):
+    def generate_info_set(self, figgie: Figgie, card_util: int, target_operation: str, target_suit: Suit):
         market = figgie.markets[target_suit.value]
         return super().generate_info_set(figgie, card_util, target_operation, target_suit) + ',' + str(market.transactions)
 
@@ -73,7 +73,7 @@ class InfoSetL(StandardGenerator):
     def __init__(self):
         super().__init__('l')
 
-    def generate_info_set(self, figgie: Figgie, card_util: float, target_operation: str, target_suit: Suit):
+    def generate_info_set(self, figgie: Figgie, card_util: int, target_operation: str, target_suit: Suit):
         last_transaction = get_last_transaction(figgie, target_operation, target_suit)
         return super().generate_info_set(figgie, card_util, target_operation, target_suit) + ',' + last_transaction
 
@@ -82,7 +82,7 @@ class InfoSetTL(StandardGenerator):
     def __init__(self):
         super().__init__('tl')
 
-    def generate_info_set(self, figgie: Figgie, card_util: float, target_operation: str, target_suit: Suit):
+    def generate_info_set(self, figgie: Figgie, card_util: int, target_operation: str, target_suit: Suit):
         market = figgie.markets[target_suit.value]
         last_transaction = get_last_transaction(figgie, target_operation, target_suit)
         return super().generate_info_set(figgie, card_util, target_operation, target_suit) + ',' + str(market.transactions) + ',' + last_transaction

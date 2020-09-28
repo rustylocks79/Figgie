@@ -12,10 +12,10 @@ class InfoSetGenerator:
     def __init__(self, name):
         self.name = name
 
-    def generate_info_set(self, figgie: Figgie, card_util: float, target_operation: str, target_suit: Suit):
+    def generate_info_set(self, figgie: Figgie, card_util: int, target_operation: str, target_suit: Suit):
         pass
 
-    def generate_actions(self, figgie: Figgie, card_util: float, target_operation: str, target_suit: Suit) -> list:
+    def generate_actions(self, figgie: Figgie, card_util: int, target_operation: str, target_suit: Suit) -> list:
         market = figgie.markets[target_suit.value]
         if target_operation == 'bid':
             return self.generate_bid_actions(card_util, market.buying_price, target_suit)
@@ -26,13 +26,13 @@ class InfoSetGenerator:
         else:
             raise ValueError('Best action can not be: {}'.format(target_suit))
 
-    def generate_bid_actions(self, card_util: float, buying_price: int, target_suit: Suit) -> list:
+    def generate_bid_actions(self, card_util: int, buying_price: int, target_suit: Suit) -> list:
         pass
 
-    def generate_ask_actions(self, card_util: float, selling_price: int, target_suit: Suit) -> list:
+    def generate_ask_actions(self, card_util: int, selling_price: int, target_suit: Suit) -> list:
         pass
 
-    def generate_at_actions(self, card_util: float, buying_price: int, selling_price: int, target_suit: Suit) -> list:
+    def generate_at_actions(self, card_util: int, buying_price: int, selling_price: int, target_suit: Suit) -> list:
         pass
 
 
@@ -42,11 +42,7 @@ class GameNode:
         self.sum_strategy = np.zeros(num_actions, dtype=float)
 
     def get_strategy(self) -> np.ndarray:
-        total = 0
-        for regret in self.sum_regret:
-            if regret > 0:
-                total += regret
-
+        total = np.sum(self.sum_regret, where=self.sum_regret > 0)
         if total > 0.0:
             strategy = np.zeros(len(self.sum_regret), dtype=float)
             for i, value in enumerate(self.sum_regret):
@@ -56,11 +52,7 @@ class GameNode:
             return np.full(len(self.sum_regret), 1.0 / len(self.sum_regret), dtype=float)
 
     def get_trained_strategy(self) -> np.ndarray:
-        total = 0
-        for regret in self.sum_strategy:
-            if regret > 0:
-                total += regret
-
+        total = np.sum(self.sum_strategy, where=self.sum_strategy > 0)
         if total > 0.0:
             strategy = np.zeros(len(self.sum_strategy), dtype=float)
             for i, value in enumerate(self.sum_strategy):
@@ -104,8 +96,8 @@ class RegretAgent(Agent):
 
         best_action, best_adv, best_suit = ModularAgent.get_best_market_adv(figgie, utils)
         if best_action is not None:
-            info_set = self.info_set_generator.generate_info_set(figgie, utils[best_suit.value], best_action, best_suit)
-            actions = self.info_set_generator.generate_actions(figgie, utils[best_suit.value], best_action, best_suit)
+            info_set = self.info_set_generator.generate_info_set(figgie, round(utils[best_suit.value]), best_action, best_suit)
+            actions = self.info_set_generator.generate_actions(figgie, round(utils[best_suit.value]), best_action, best_suit)
             assert len(actions) != 0, 'Length of actions == 0'
             return info_set, actions
 
@@ -155,9 +147,7 @@ class RegretAgent(Agent):
 
         epsilon = 0.6
         if player == training_player:
-            probability = np.zeros(len(actions), dtype=float)
-            for action in range(len(actions)):
-                probability[action] = epsilon / len(actions) + (1.0 - epsilon) * strategy[action]
+            probability = epsilon / len(actions) + ((1.0 - epsilon) * strategy)
         else:
             probability = np.copy(strategy)
 
@@ -174,12 +164,11 @@ class RegretAgent(Agent):
 
         if player == training_player:
             w = util * p_tail
-            for action in range(len(actions)):
-                regret = w * (1 - strategy[action_index]) if action == action_index else -w * strategy[action_index]
-                node.sum_regret[action] += regret
+            regret = w * (1 - strategy)
+            regret[action_index] = -w * strategy[action_index]
+            node.sum_regret += regret
         else:
-            for action in range(len(actions)):
-                node.sum_strategy[action] += strategy[action] / pi_prime
+            node.sum_strategy += strategy / pi_prime
 
         if player == training_player:
             return util, p_tail * strategy[action_index]
