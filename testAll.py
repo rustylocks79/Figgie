@@ -28,7 +28,7 @@ def main():
             print('Found strategy at: {}'.format(file_path))
             print('\tnum info sets: {}'.format(len(game_tree)))
             print('\ttrials trained: {}'.format(trials))
-            print('\tmodel: {}'.format(model))
+            print('\tmodel: {}'.format(model.name))
             print('\tinfo set generator: {}'.format(info_set.name))
 
             agents = [ModularAgent(SimpleModel(), MarketBuyPricer(), MarketSellPricer()),

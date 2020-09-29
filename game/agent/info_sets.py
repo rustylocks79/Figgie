@@ -61,7 +61,7 @@ class StandardGenerator(InfoSetGenerator):
 
 class InfoSetH(StandardGenerator):
     def __init__(self):
-        super().__init__('t')
+        super().__init__('h')
 
     def generate_info_set(self, figgie: Figgie, card_util: int, target_operation: str, target_suit: Suit):
         player = figgie.active_player
@@ -89,7 +89,7 @@ class InfoSetL(StandardGenerator):
 
 class InfoSetHT(StandardGenerator):
     def __init__(self):
-        super().__init__('t')
+        super().__init__('ht')
 
     def generate_info_set(self, figgie: Figgie, card_util: int, target_operation: str, target_suit: Suit):
         player = figgie.active_player
@@ -100,7 +100,7 @@ class InfoSetHT(StandardGenerator):
 
 class InfoSetHL(StandardGenerator):
     def __init__(self):
-        super().__init__('t')
+        super().__init__('hl')
 
     def generate_info_set(self, figgie: Figgie, card_util: int, target_operation: str, target_suit: Suit):
         player = figgie.active_player

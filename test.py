@@ -28,10 +28,10 @@ def test(game: Figgie, agents: list, trials: int, verbose=False):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Train a strategy using CFR')
+    parser = argparse.ArgumentParser(description='Test a strategy')
     parser.add_argument('-t', '--trials', type=int, default=10_000, help='number of tests games to run. ')
     parser.add_argument('-v', '--verbose', type=bool, default=False, help='output actions')
-    parser.add_argument('-s', '--strategy', type=str, default='strategies/strategy_10000_simple.pickle', help='the regret agent strategy')
+    parser.add_argument('-s', '--strategy', type=str, default='strategies/strat_10000_simple_std.pickle', help='the regret agent strategy')
     args = parser.parse_args()
 
     figgie = Figgie()
