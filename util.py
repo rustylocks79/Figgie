@@ -15,7 +15,8 @@ info_sets = {'std': StandardGenerator('std'),
              'l': InfoSetL(),
              'ht': InfoSetHT(),
              'hl': InfoSetHL(),
-             'tl': InfoSetTL()}
+             'tl': InfoSetTL(),
+             'htl': InfoSetHTL()}
 
 
 def load(file_name: str) -> tuple:
