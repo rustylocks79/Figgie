@@ -1,6 +1,7 @@
 import argparse
 import time
 
+from game.agent.info_sets import InfoSetH
 from game.agent.modular_agent import *
 from game.agent.regret_agent import RegretAgent
 from game.figgie import Figgie
@@ -16,7 +17,7 @@ def test(game: Figgie, agents: list, trials: int, verbose=False):
 
     print('Results: ')
     for i, agent in enumerate(agents):
-        print('agent {}: ({})'.format(i, type(agent)))
+        print('agent {}: ({})'.format(i, agent.name))
         print('\twins: {}'.format(agent.wins))
         print('\tavg. utility: {}, total utility: {}'.format(agent.total_utility / trials, agent.total_utility))
         print('\trmse of model: {}'.format(agent.get_rmse()))
@@ -32,6 +33,7 @@ def main():
     parser.add_argument('-t', '--trials', type=int, default=10_000, help='number of tests games to run. ')
     parser.add_argument('-v', '--verbose', type=bool, default=False, help='output actions')
     parser.add_argument('-s', '--strategy', type=str, default='strategies/strat_10000_simple_std.pickle', help='the regret agent strategy')
+    parser.add_argument('-m', '--mode', type=str, default='m', help='r for regret opponents, m for modular opponents. ')
     args = parser.parse_args()
 
     figgie = Figgie()
@@ -45,10 +47,17 @@ def main():
     print('\t\tmodel: {}'.format(model.name))
     print('\t\tinfo set generator: {}'.format(info_set.name))
 
-    agents = [ModularAgent(SimpleModel(), MarketBuyPricer(), MarketSellPricer()),
-              ModularAgent(SimpleModel(), UtilBuyPricer(), UtilSellPricer()),
-              ModularAgent(SimpleModel(), RandomBuyPricer(), RandomSellPricer()),
-              RegretAgent(model, info_set, ModularAgent(SimpleModel(), HalfBuyPricer(), HalfSellPricer()), game_tree=game_tree)]
+    if args.mode == 'm':
+        agents = [ModularAgent(SimpleModel(), MarketBuyPricer(), MarketSellPricer()),
+                  ModularAgent(SimpleModel(), UtilBuyPricer(), UtilSellPricer()),
+                  ModularAgent(SimpleModel(), RandomBuyPricer(), RandomSellPricer()),
+                  RegretAgent(model, info_set, ModularAgent(SimpleModel(), HalfBuyPricer(), HalfSellPricer()), game_tree=game_tree)]
+    else:
+        std_game_tree, _, _, _ = load('strategies/strat_1000000_simple_std.pickle')
+        agents = [RegretAgent(SimpleModel(), InfoSetH(), ModularAgent(SimpleModel(), HalfBuyPricer(), HalfSellPricer()), game_tree=std_game_tree),
+                  RegretAgent(SimpleModel(), InfoSetH(), ModularAgent(SimpleModel(), HalfBuyPricer(), HalfSellPricer()), game_tree=std_game_tree),
+                  RegretAgent(SimpleModel(), InfoSetH(), ModularAgent(SimpleModel(), HalfBuyPricer(), HalfSellPricer()), game_tree=std_game_tree),
+                  RegretAgent(model, info_set, ModularAgent(SimpleModel(), HalfBuyPricer(), HalfSellPricer()), game_tree=game_tree)]
 
     test(figgie, agents, args.trials, args.verbose)
 

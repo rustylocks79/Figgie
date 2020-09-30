@@ -39,7 +39,7 @@ class SellPricer:
 
 class ModularAgent(Agent):
     def __init__(self, model: UtilityModel, buy_pricer: BuyPricer, sell_pricer: SellPricer):
-        super().__init__()
+        super().__init__('Modular Agent')
         self.util_model = model
         self.buy_pricer = buy_pricer
         self.sell_pricer = sell_pricer

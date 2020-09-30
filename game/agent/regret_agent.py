@@ -75,7 +75,7 @@ class GameNode:
 
 class RegretAgent(Agent):
     def __init__(self, util_model, info_set_generator: InfoSetGenerator, default_agent: Agent, game_tree: dict = None):
-        super().__init__()
+        super().__init__('Regret Agent')
         if game_tree is None:
             game_tree = {}
         self.game_tree = game_tree

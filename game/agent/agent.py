@@ -6,7 +6,8 @@ from game.model.cheating_model import CheatingModel
 
 
 class Agent:
-    def __init__(self):
+    def __init__(self, name):
+        self.name = name
         self.wins = 0
         self.total_utility = 0
         self.total_error = 0
