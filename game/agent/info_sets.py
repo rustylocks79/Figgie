@@ -117,3 +117,15 @@ class InfoSetTL(StandardGenerator):
         market = figgie.markets[target_suit.value]
         last_transaction = get_last_transaction(figgie, target_operation, target_suit)
         return super().generate_info_set(figgie, card_util, target_operation, target_suit) + ',' + str(market.transactions) + ',' + last_transaction
+
+
+class InfoSetHTL(StandardGenerator):
+    def __init__(self):
+        super().__init__('htl')
+
+    def generate_info_set(self, figgie: Figgie, card_util: int, target_operation: str, target_suit: Suit):
+        player = figgie.active_player
+        hand = figgie.cards[figgie.active_player]
+        market = figgie.markets[target_suit.value]
+        last_transaction = get_last_transaction(figgie, target_operation, target_suit)
+        return super().generate_info_set(figgie, card_util, target_operation, target_suit) + ',' + str(hand[player]) + ',' + str(market.transactions) + ',' + last_transaction
