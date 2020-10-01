@@ -15,6 +15,7 @@ def dict_add(d, key, value):
 
 
 def main():
+    #TODO: make a mathplotlib plot for each var verse best price. Adjust for htl
     parser = argparse.ArgumentParser(description='Extract info from strategy')
     parser.add_argument('-s', '--strategy', type=str, default='strategies/strat_10000_simple_std.pickle', help='the regret agent strategy')
     args = parser.parse_args()
@@ -48,53 +49,62 @@ def main():
         if tokens[0] == 'ask':
             card_util = int(tokens[1])
             selling_price = int(tokens[2]) if tokens[2] != 'N' else None
+            hand = int(tokens[3])
+            transactions = int(tokens[4])
+            last_transaction = int(tokens[5])
             actions = info_set.generate_ask_actions(card_util, selling_price, Suit.CLUBS)
             best_action_index = strategy.argmax()
             best_action = actions[best_action_index]
             if selling_price is not None:
                 count_asks += 1
-                asking_x.append([selling_price, card_util])
+                asking_x.append([selling_price, card_util, hand, transactions, last_transaction])
                 asking_y.append(best_action.selling_price)
             else:
                 count_asks_empty += 1
-                asking_x_empty.append(card_util)
+                asking_x_empty.append([card_util, hand, transactions, last_transaction])
                 asking_y_empty.append(best_action.selling_price)
         elif tokens[0] == 'bid':
             card_util = int(tokens[1])
             buying_price = int(tokens[2]) if tokens[2] != 'N' else None
+            hand = int(tokens[3])
+            transactions = int(tokens[4])
+            last_transaction = int(tokens[5])
             actions = info_set.generate_bid_actions(card_util, buying_price, Suit.CLUBS)
             best_action_index = strategy.argmax()
             best_action = actions[best_action_index]
             if buying_price is not None:
                 count_bids += 1
-                bidding_x.append([buying_price, card_util])
+                bidding_x.append([buying_price, card_util, hand, transactions, last_transaction])
                 bidding_y.append(best_action.buying_price)
             else:
                 count_bids_empty += 1
-                bidding_x_empty.append(card_util)
+                bidding_x_empty.append([card_util, hand, transactions, last_transaction])
                 bidding_y_empty.append(best_action.buying_price)
         elif tokens[0] == 'at':
             card_util = int(tokens[1])
             buying_price = int(tokens[2]) if tokens[2] != 'N' else None
             selling_price = int(tokens[3]) if tokens[3] != 'N' else None
+            hand = int(tokens[4])
+            transactions = int(tokens[5])
+            last_transaction = int(tokens[6])
             actions = info_set.generate_at_actions(card_util, buying_price, selling_price, Suit.CLUBS)
             best_action_index = strategy.argmax()
             best_action = actions[best_action_index]
             if buying_price is not None:
                 count_bids += 1
-                bidding_x.append([buying_price, card_util])
+                bidding_x.append([buying_price, card_util, hand, transactions, last_transaction])
                 bidding_y.append(best_action.buying_price)
             else:
                 count_bids_empty += 1
-                bidding_x_empty.append(card_util)
+                bidding_x_empty.append([card_util, hand, transactions, last_transaction])
                 bidding_y_empty.append(best_action.buying_price)
             if selling_price is not None:
                 count_asks += 1
-                asking_x.append([selling_price, card_util])
+                asking_x.append([selling_price, card_util, hand, transactions, last_transaction])
                 asking_y.append(best_action.selling_price)
             else:
                 count_asks_empty += 1
-                asking_x_empty.append(card_util)
+                asking_x_empty.append([card_util, hand, transactions, last_transaction])
                 asking_y_empty.append(best_action.selling_price)
 
         else:
