@@ -51,7 +51,7 @@ def main():
             selling_price = int(tokens[2]) if tokens[2] != 'N' else None
             hand = int(tokens[3])
             transactions = int(tokens[4])
-            last_transaction = int(tokens[5])
+            last_transaction = int(tokens[5]) if tokens[6] != 'N' else 0
             actions = info_set.generate_ask_actions(card_util, selling_price, Suit.CLUBS)
             best_action_index = strategy.argmax()
             best_action = actions[best_action_index]
@@ -68,7 +68,7 @@ def main():
             buying_price = int(tokens[2]) if tokens[2] != 'N' else None
             hand = int(tokens[3])
             transactions = int(tokens[4])
-            last_transaction = int(tokens[5])
+            last_transaction = int(tokens[5]) if tokens[6] != 'N' else 0
             actions = info_set.generate_bid_actions(card_util, buying_price, Suit.CLUBS)
             best_action_index = strategy.argmax()
             best_action = actions[best_action_index]
@@ -86,7 +86,7 @@ def main():
             selling_price = int(tokens[3]) if tokens[3] != 'N' else None
             hand = int(tokens[4])
             transactions = int(tokens[5])
-            last_transaction = int(tokens[6])
+            last_transaction = int(tokens[6]) if tokens[6] != 'N' else 0
             actions = info_set.generate_at_actions(card_util, buying_price, selling_price, Suit.CLUBS)
             best_action_index = strategy.argmax()
             best_action = actions[best_action_index]
