@@ -1,6 +1,9 @@
 import numpy as np
 
 from game.action.action import Action
+from game.action.ask_action import AskAction
+from game.action.at_action import AtAction
+from game.action.bid_action import BidAction
 from game.action.pass_action import PassAction
 from game.agent.agent import Agent
 from game.agent.modular_agent import ModularAgent
@@ -15,7 +18,7 @@ class InfoSetGenerator:
     def generate_info_set(self, figgie: Figgie, card_util: int, target_operation: str, target_suit: Suit):
         pass
 
-    def generate_actions(self, figgie: Figgie, card_util: int, target_operation: str, target_suit: Suit) -> list:
+    def generate_actions(self, figgie: Figgie, card_util: int, target_operation: str, target_suit: Suit) -> np.ndarray:
         market = figgie.markets[target_suit.value]
         if target_operation == 'bid':
             return self.generate_bid_actions(card_util, market.buying_price, target_suit)
@@ -26,13 +29,13 @@ class InfoSetGenerator:
         else:
             raise ValueError('Best action can not be: {}'.format(target_suit))
 
-    def generate_bid_actions(self, card_util: int, buying_price: int, target_suit: Suit) -> list:
+    def generate_bid_actions(self, card_util: int, buying_price: int, target_suit: Suit) -> np.ndarray:
         pass
 
-    def generate_ask_actions(self, card_util: int, selling_price: int, target_suit: Suit) -> list:
+    def generate_ask_actions(self, card_util: int, selling_price: int, target_suit: Suit) -> np.ndarray:
         pass
 
-    def generate_at_actions(self, card_util: int, buying_price: int, selling_price: int, target_suit: Suit) -> list:
+    def generate_at_actions(self, card_util: int, buying_price: int, selling_price: int, target_suit: Suit) -> np.ndarray:
         pass
 
 
@@ -44,9 +47,8 @@ class GameNode:
     def get_strategy(self) -> np.ndarray:
         total = np.sum(self.sum_regret, where=self.sum_regret > 0)
         if total > 0.0:
-            strategy = np.zeros(len(self.sum_regret), dtype=float)
-            for i, value in enumerate(self.sum_regret):
-                strategy[i] = max(0.0, value / total)
+            strategy = np.true_divide(self.sum_regret, total)
+            strategy[strategy < 0] = 0
             return strategy
         else:
             return np.full(len(self.sum_regret), 1.0 / len(self.sum_regret), dtype=float)
@@ -54,9 +56,8 @@ class GameNode:
     def get_trained_strategy(self) -> np.ndarray:
         total = np.sum(self.sum_strategy, where=self.sum_strategy > 0)
         if total > 0.0:
-            strategy = np.zeros(len(self.sum_strategy), dtype=float)
-            for i, value in enumerate(self.sum_strategy):
-                strategy[i] = max(0.0, value / total)
+            strategy = np.true_divide(self.sum_strategy, total)
+            strategy[strategy < 0] = 0
             return strategy
         else:
             return np.full(len(self.sum_strategy), 1.0 / len(self.sum_strategy), dtype=float)
@@ -88,35 +89,42 @@ class RegretAgent(Agent):
         super().reset()
         self.util_model.reset()
 
-    def get_configuration(self, figgie: Figgie):
+    @staticmethod
+    def create_action(operation, suit, price) -> Action:
+        if operation == 'ask':
+            return AskAction(suit, price)
+        elif operation == 'bid':
+            return BidAction(suit, price)
+        elif operation == 'at':
+            return AtAction(suit, price[0], price[1])
+        else:
+            raise ValueError('Invalid Operation: {}'.format(operation))
+
+    def get_action(self, figgie, training_mode: bool = False) -> Action:
         utils = ModularAgent.calc_card_utils(self, figgie)
         best_transaction = ModularAgent.get_best_transaction(figgie, utils)
         if best_transaction is not None:
-            return None, best_transaction
+            return best_transaction
 
         best_action, best_adv, best_suit = ModularAgent.get_best_market_adv(figgie, utils)
         if best_action is not None:
-            info_set = self.info_set_generator.generate_info_set(figgie, round(utils[best_suit.value]), best_action, best_suit)
-            actions = self.info_set_generator.generate_actions(figgie, round(utils[best_suit.value]), best_action, best_suit)
+            info_set = self.info_set_generator.generate_info_set(figgie, round(utils[best_suit.value]), best_action,
+                                                                 best_suit)
+            actions = self.info_set_generator.generate_actions(figgie, round(utils[best_suit.value]), best_action,
+                                                               best_suit)
             assert len(actions) != 0, 'Length of actions == 0'
-            return info_set, actions
-
-        return None, PassAction()
-
-    def get_action(self, figgie, training_mode: bool = False) -> Action:
-        info_set, actions = self.get_configuration(figgie)
-        if info_set is None:  # Action chosen by market
-            return actions
-        elif info_set in self.game_tree:
-            percents = self.game_tree[info_set].get_trained_strategy()
-            action = np.random.choice(actions, p=percents)
-            if figgie.can_preform(action):
-                return action
+            if info_set in self.game_tree:
+                percents = self.game_tree[info_set].get_trained_strategy()
+                price = np.random.choice(actions, p=percents)
+                action = self.create_action(best_action, best_suit, price)
+                if figgie.can_preform(action):
+                    return action
+                else:
+                    return PassAction()
             else:
-                return PassAction()
-        else:
-            self.unknown_states += 1
-            return self.default_agent.get_action(figgie)
+                self.unknown_states += 1
+                return self.default_agent.get_action(figgie)
+        return PassAction()
 
     def on_action(self, figgie: Figgie, index: int, action: Action) -> None:
         self.util_model.on_action(figgie, index, action)
@@ -133,15 +141,28 @@ class RegretAgent(Agent):
             utility = figgie.get_utility()
             return utility[player] / pi_prime, 1.0
 
-        info_set, actions = self.get_configuration(figgie)
-        if info_set is None:
-            figgie.preform(actions)
+        # Chose action
+        utils = ModularAgent.calc_card_utils(self, figgie)
+        best_transaction = ModularAgent.get_best_transaction(figgie, utils)
+        if best_transaction is not None:
+            figgie.preform(best_transaction)
             return self.__train(figgie, pi, pi_prime, training_player)
-        elif info_set in self.game_tree:
-            node = self.game_tree[info_set]
+
+        best_action, best_adv, best_suit = ModularAgent.get_best_market_adv(figgie, utils)
+        if best_action is None:
+            figgie.preform(PassAction())
+            return self.__train(figgie, pi, pi_prime, training_player)
         else:
-            node = GameNode(len(actions))
-            self.game_tree[info_set] = node
+            info_set = self.info_set_generator.generate_info_set(figgie, round(utils[best_suit.value]), best_action,
+                                                                 best_suit)
+            actions = self.info_set_generator.generate_actions(figgie, round(utils[best_suit.value]), best_action,
+                                                               best_suit)
+            assert len(actions) != 0, 'Length of actions == 0'
+            if info_set in self.game_tree:
+                node = self.game_tree[info_set]
+            else:
+                node = GameNode(len(actions))
+                self.game_tree[info_set] = node
 
         strategy = node.get_strategy()
 
@@ -151,13 +172,15 @@ class RegretAgent(Agent):
         else:
             probability = np.copy(strategy)
 
-        action_index = np.random.choice(len(probability), p=probability)
-        if figgie.can_preform(actions[action_index]):
-            figgie.preform(actions[action_index])
+        action_index = np.random.choice(len(actions), p=probability)
+        price = actions[action_index]
+        action = self.create_action(best_action, best_suit, price)
+        if figgie.can_preform(action):
+            figgie.preform(action)
         else:
             figgie.preform(PassAction())
             return self.__train(figgie, pi, pi_prime, training_player)
-        self.on_action(figgie, player, actions[action_index])
+        self.on_action(figgie, player, action)
         result = self.__train(figgie, pi * strategy[action_index], pi_prime * probability[action_index], training_player) if player == training_player else self.__train(figgie, pi, pi_prime, training_player)
         util = -result[0]
         p_tail = result[1]
