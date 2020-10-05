@@ -64,10 +64,12 @@ class Testing(unittest.TestCase):
                                  'Market not reset after buy')
                 self.assertEqual(self.game.markets[s.value].selling_price, None,
                                  'Market not reset after buy')
-            self.assertEqual(self.game.chips[buying_player], STARTING_CHIPS - 7, 'Chips not properly subtracted')
-            self.assertEqual(self.game.chips[asking_player], STARTING_CHIPS + 7, 'Chips not properly added')
-            self.assertEqual(self.game.cards[buying_player][suit.value], 3, 'card not properly added')
-            self.assertEqual(self.game.cards[asking_player][suit.value], 1, 'card not properly subtracted')
+            self.assertEqual(STARTING_CHIPS - 7, self.game.chips[buying_player], 'Chips not properly subtracted')
+            self.assertEqual(STARTING_CHIPS + 7, self.game.chips[asking_player], 'Chips not properly added')
+            self.assertEqual(3, self.game.cards[buying_player][suit.value], 'card not properly added')
+            self.assertEqual(1, self.game.cards[asking_player][suit.value], 'card not properly subtracted')
+            self.assertEqual(1, self.game.markets[suit.value].transactions)
+            self.assertEqual(7, self.game.markets[suit.value].last_price_bought)
             self.game.reset()
             self.game.cards = np.full((4, 4), 2, dtype=int)
 
@@ -89,10 +91,12 @@ class Testing(unittest.TestCase):
                                  'Market not reset after sell')
                 self.assertEqual(self.game.markets[s.value].selling_price, None,
                                  'Market not reset after sell')
-            self.assertEqual(self.game.chips[bidding_player], STARTING_CHIPS - 7, 'Chips not properly subtracted')
-            self.assertEqual(self.game.chips[selling_player], STARTING_CHIPS + 7, 'Chips not properly added')
-            self.assertEqual(self.game.cards[bidding_player][suit.value], 3, 'card not properly added')
-            self.assertEqual(self.game.cards[selling_player][suit.value], 1, 'card not properly subtracted')
+            self.assertEqual(STARTING_CHIPS - 7, self.game.chips[bidding_player], 'Chips not properly subtracted')
+            self.assertEqual(STARTING_CHIPS + 7, self.game.chips[selling_player], 'Chips not properly added')
+            self.assertEqual(3, self.game.cards[bidding_player][suit.value], 'card not properly added')
+            self.assertEqual(1, self.game.cards[selling_player][suit.value], 'card not properly subtracted')
+            self.assertEqual(1, self.game.markets[suit.value].transactions)
+            self.assertEqual(7, self.game.markets[suit.value].last_price_sold)
             self.game.reset()
             self.game.cards = np.full((4, 4), 2, dtype=int)
 
