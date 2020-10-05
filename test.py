@@ -1,7 +1,7 @@
 import argparse
 import time
 
-from game.agent.info_sets import InfoSetH
+from game.agent.info_sets import StandardGenerator
 from game.agent.modular_agent import *
 from game.agent.regret_agent import RegretAgent
 from game.figgie import Figgie
@@ -54,9 +54,9 @@ def main():
                   RegretAgent(model, info_set, ModularAgent(SimpleModel(), HalfBuyPricer(), HalfSellPricer()), game_tree=game_tree)]
     else:
         std_game_tree, _, _, _ = load('strategies/strat_1000000_simple_std.pickle')
-        agents = [RegretAgent(SimpleModel(), InfoSetH(), ModularAgent(SimpleModel(), HalfBuyPricer(), HalfSellPricer()), game_tree=std_game_tree),
-                  RegretAgent(SimpleModel(), InfoSetH(), ModularAgent(SimpleModel(), HalfBuyPricer(), HalfSellPricer()), game_tree=std_game_tree),
-                  RegretAgent(SimpleModel(), InfoSetH(), ModularAgent(SimpleModel(), HalfBuyPricer(), HalfSellPricer()), game_tree=std_game_tree),
+        agents = [RegretAgent(SimpleModel(), StandardGenerator('std'), ModularAgent(SimpleModel(), HalfBuyPricer(), HalfSellPricer()), game_tree=std_game_tree),
+                  RegretAgent(SimpleModel(), StandardGenerator('std'), ModularAgent(SimpleModel(), HalfBuyPricer(), HalfSellPricer()), game_tree=std_game_tree),
+                  RegretAgent(SimpleModel(), StandardGenerator('std'), ModularAgent(SimpleModel(), HalfBuyPricer(), HalfSellPricer()), game_tree=std_game_tree),
                   RegretAgent(model, info_set, ModularAgent(SimpleModel(), HalfBuyPricer(), HalfSellPricer()), game_tree=game_tree)]
 
     test(figgie, agents, args.trials, args.verbose)
