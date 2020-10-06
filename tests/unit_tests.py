@@ -9,6 +9,7 @@ from game.action.pass_action import PassAction
 from game.action.sell_action import SellAction
 from game.figgie import Figgie, STARTING_CHIPS, SUITS
 from game.suit import Suit
+from util import info_sets
 
 
 class Testing(unittest.TestCase):
@@ -105,3 +106,13 @@ class Testing(unittest.TestCase):
         self.game.cards = np.array([[12, 0, 0, 0], [0, 10, 0, 0], [0, 0, 8, 0], [0, 0, 0, 10]])
         results = self.game.get_utility()
         self.assertEqual([250, 250, 250, 450], results.tolist())
+
+    def test_names(self):
+        self.assertEqual('std', info_sets['std'].name)
+        self.assertEqual('h', info_sets['h'].name)
+        self.assertEqual('t', info_sets['t'].name)
+        self.assertEqual('l', info_sets['l'].name)
+        self.assertEqual('ht', info_sets['ht'].name)
+        self.assertEqual('hl', info_sets['hl'].name)
+        self.assertEqual('tl', info_sets['tl'].name)
+        self.assertEqual('htl', info_sets['htl'].name)

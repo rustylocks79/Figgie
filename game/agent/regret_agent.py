@@ -141,7 +141,6 @@ class RegretAgent(Agent):
             utility = figgie.get_utility()
             return utility[player] / pi_prime, 1.0
 
-        # Chose action
         utils = ModularAgent.calc_card_utils(self, figgie)
         best_transaction = ModularAgent.get_best_transaction(figgie, utils)
         if best_transaction is not None:

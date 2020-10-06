@@ -15,7 +15,6 @@ def dict_add(d, key, value):
 
 
 def main():
-    #TODO: make a mathplotlib plot for each var verse best price. Adjust for htl
     parser = argparse.ArgumentParser(description='Extract info from strategy')
     parser.add_argument('-s', '--strategy', type=str, default='strategies/strat_10000_simple_std.pickle', help='the regret agent strategy')
     args = parser.parse_args()
@@ -46,66 +45,53 @@ def main():
         value = game_tree[key]
         strategy = value.get_trained_strategy()
         tokens = key.split(',')
+        card_util = int(tokens[1])
         if tokens[0] == 'ask':
-            card_util = int(tokens[1])
             selling_price = int(tokens[2]) if tokens[2] != 'N' else None
-            hand = int(tokens[3])
-            transactions = int(tokens[4])
-            last_transaction = int(tokens[5]) if tokens[5] != 'N' else 0
             actions = info_set.generate_ask_actions(card_util, selling_price, Suit.CLUBS)
-            best_action_index = strategy.argmax()
-            best_action = actions[best_action_index]
+            best_price = actions[strategy.argmax()]
             if selling_price is not None:
                 count_asks += 1
-                asking_x.append([selling_price, card_util, hand, transactions, last_transaction])
-                asking_y.append(best_action.selling_price)
+                asking_x.append([selling_price, card_util])
+                asking_y.append(best_price)
             else:
                 count_asks_empty += 1
-                asking_x_empty.append([card_util, hand, transactions, last_transaction])
-                asking_y_empty.append(best_action.selling_price)
+                asking_x_empty.append(card_util)
+                asking_y_empty.append(best_price)
         elif tokens[0] == 'bid':
-            card_util = int(tokens[1])
             buying_price = int(tokens[2]) if tokens[2] != 'N' else None
-            hand = int(tokens[3])
-            transactions = int(tokens[4])
-            last_transaction = int(tokens[5]) if tokens[5] != 'N' else 0
             actions = info_set.generate_bid_actions(card_util, buying_price, Suit.CLUBS)
-            best_action_index = strategy.argmax()
-            best_action = actions[best_action_index]
+            best_price = actions[strategy.argmax()]
             if buying_price is not None:
                 count_bids += 1
-                bidding_x.append([buying_price, card_util, hand, transactions, last_transaction])
-                bidding_y.append(best_action.buying_price)
+                bidding_x.append([buying_price, card_util])
+                bidding_y.append(best_price)
             else:
                 count_bids_empty += 1
-                bidding_x_empty.append([card_util, hand, transactions, last_transaction])
-                bidding_y_empty.append(best_action.buying_price)
+                bidding_x_empty.append(card_util)
+                bidding_y_empty.append(best_price)
         elif tokens[0] == 'at':
-            card_util = int(tokens[1])
             buying_price = int(tokens[2]) if tokens[2] != 'N' else None
             selling_price = int(tokens[3]) if tokens[3] != 'N' else None
-            hand = int(tokens[4])
-            transactions = int(tokens[5])
-            last_transaction = int(tokens[6]) if tokens[6] != 'N' else 0
             actions = info_set.generate_at_actions(card_util, buying_price, selling_price, Suit.CLUBS)
-            best_action_index = strategy.argmax()
-            best_action = actions[best_action_index]
+            best_price = actions[strategy.argmax()]
             if buying_price is not None:
                 count_bids += 1
-                bidding_x.append([buying_price, card_util, hand, transactions, last_transaction])
-                bidding_y.append(best_action.buying_price)
+                bidding_x.append([buying_price, card_util])
+                bidding_y.append(best_price[0])
             else:
                 count_bids_empty += 1
-                bidding_x_empty.append([card_util, hand, transactions, last_transaction])
-                bidding_y_empty.append(best_action.buying_price)
+                bidding_x_empty.append(card_util)
+                bidding_y_empty.append(best_price[0])
+
             if selling_price is not None:
                 count_asks += 1
-                asking_x.append([selling_price, card_util, hand, transactions, last_transaction])
-                asking_y.append(best_action.selling_price)
+                asking_x.append([selling_price, card_util])
+                asking_y.append(best_price[1])
             else:
                 count_asks_empty += 1
-                asking_x_empty.append([card_util, hand, transactions, last_transaction])
-                asking_y_empty.append(best_action.selling_price)
+                asking_x_empty.append(card_util)
+                asking_y_empty.append(best_price[1])
 
         else:
             raise ValueError('Invalid operation: {}'.format(key))
@@ -116,7 +102,7 @@ def main():
     print('\tcount: {}'.format(count_asks))
     regression = LinearRegression()
     x = np.array(asking_x)
-    y = np.array(asking_y)
+    y = np.array(asking_y, dtype=np.int32)
     regression.fit(x, y)
     score = regression.score(x, y)
     print('\tscore: {}'.format(score))
@@ -127,7 +113,7 @@ def main():
     print('\tcount: {}'.format(count_asks_empty))
     regression = LinearRegression()
     x = np.array(asking_x_empty).reshape(-1, 1)
-    y = np.array(asking_y_empty)
+    y = np.array(asking_y_empty, dtype=np.int32)
     regression.fit(x, y)
     score = regression.score(x, y)
     print('\tscore: {}'.format(score))
@@ -138,7 +124,7 @@ def main():
     print('\tcount: {}'.format(count_bids))
     regression = LinearRegression()
     x = np.array(bidding_x)
-    y = np.array(bidding_y)
+    y = np.array(bidding_y, dtype=np.int32)
     regression.fit(x, y)
     score = regression.score(x, y)
     print('\tscore: {}'.format(score))
@@ -148,8 +134,8 @@ def main():
     print('bid pricer in empty market: ')
     print('\tcount: {}'.format(count_bids_empty))
     regression = LinearRegression()
-    x = np.array(bidding_x_empty).reshape((-1, 1))
-    y = np.array(bidding_y_empty)
+    x = np.array(bidding_x_empty).reshape(-1, 1)
+    y = np.array(bidding_y_empty, dtype=np.int32)
     regression.fit(x, y)
     score = regression.score(x, y)
     print('\tscore: {}'.format(score))
