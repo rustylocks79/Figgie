@@ -21,7 +21,6 @@ class StandardGenerator(InfoSetGenerator):
         super().__init__(name)
 
     def generate_info_set(self, figgie: Figgie, card_util: int, target_operation: str, target_suit: Suit):
-        # TODO: remove unneeded parameter and use np.arrange()
         market = figgie.markets[target_suit.value]
         if target_operation == 'bid':
             return 'bid,{},{}'.format(card_util, market.buying_price if market.has_buyer() else 'N')
@@ -77,6 +76,15 @@ class InfoSetL(StandardGenerator):
     def generate_info_set(self, figgie: Figgie, card_util: int, target_operation: str, target_suit: Suit):
         last_transaction = get_last_transaction(figgie, target_operation, target_suit)
         return super().generate_info_set(figgie, card_util, target_operation, target_suit) + ',' + last_transaction
+
+
+class InfoSetO(StandardGenerator):
+    def __init__(self):
+        super().__init__('o')
+
+    def generate_info_set(self, figgie: Figgie, card_util: int, target_operation: str, target_suit: Suit):
+        market = figgie.markets[target_suit.value]
+        return super().generate_info_set(figgie, card_util, target_operation, target_suit) + ',' + str(market.operations)
 
 
 class InfoSetHT(StandardGenerator):

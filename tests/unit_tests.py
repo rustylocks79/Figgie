@@ -80,8 +80,9 @@ class Testing(unittest.TestCase):
             self.assertTrue(can)
             bidding_player = self.game.active_player
             self.game.preform(BidAction(suit, 7))
-            self.assertEqual(self.game.markets[suit.value].buying_price, 7,
+            self.assertEqual(7, self.game.markets[suit.value].buying_price,
                              'Buying price not set properly with ask operation')
+            self.assertEqual(1, self.game.markets[suit.value].operations)
             selling_player = self.game.active_player
             if selling_player == bidding_player:
                 self.game.preform(PassAction(selling_player))
@@ -98,6 +99,7 @@ class Testing(unittest.TestCase):
             self.assertEqual(1, self.game.cards[selling_player][suit.value], 'card not properly subtracted')
             self.assertEqual(1, self.game.markets[suit.value].transactions)
             self.assertEqual(7, self.game.markets[suit.value].last_price_sold)
+            self.assertEqual(2, self.game.markets[suit.value].operations)
             self.game.reset()
             self.game.cards = np.full((4, 4), 2, dtype=int)
 

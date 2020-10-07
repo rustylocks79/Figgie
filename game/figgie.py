@@ -199,6 +199,7 @@ class Market:
         self.last_price_sold = None
         self.last_price_bought = None
         self.transactions = 0
+        self.operations = 0
 
     def reset(self) -> None:
         """
@@ -208,6 +209,7 @@ class Market:
         self.last_price_sold = None
         self.last_price_bought = None
         self.transactions = 0
+        self.operations = 0
 
     def clear(self):
         self.buying_price = None
@@ -236,6 +238,7 @@ class Market:
             raise ValueError('player {} can not ask {} for {} because {}'.format(player, amount, self.suit.name, reason))
         self.selling_price = amount
         self.selling_player = player
+        self.operations += 1
 
     def can_bid(self, player: int, amount: int) -> tuple:
         chips = self.figgie.chips[player]
@@ -253,6 +256,7 @@ class Market:
             raise ValueError('player {} can not bid {} for {} because {}. '.format(player, amount, self.suit.name, reason))
         self.buying_price = amount
         self.buying_player = player
+        self.operations += 1
 
     def can_at(self, player: int, buying_price: int, selling_price: int) -> tuple:
         can, reason = self.can_bid(player, buying_price)
@@ -271,6 +275,7 @@ class Market:
             raise ValueError('player {} can not {} at {} because {}'.format(player, buying_price, selling_price, reason))
         self.bid(player, buying_price)
         self.ask(player, selling_price)
+        self.operations += 1
 
     def can_buy(self, player: int) -> tuple:
         chips = self.figgie.chips[player]
@@ -297,6 +302,7 @@ class Market:
 
         self.last_price_bought = self.selling_price
         self.transactions += 1
+        self.operations += 1
 
     def can_sell(self, player: int) -> tuple:
         if player is self.buying_player:
@@ -322,6 +328,7 @@ class Market:
 
         self.last_price_sold = self.buying_price
         self.transactions += 1
+        self.operations += 1
 
     def has_buyer(self) -> bool:
         return self.buying_price is not None
