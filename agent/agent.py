@@ -1,8 +1,7 @@
 from math import sqrt
 
-from game.action.action import Action
-from game.figgie import Figgie
-from game.model.cheating_model import CheatingModel
+from agent.models.cheating_model import CheatingModel
+from figgie import Figgie, Action
 
 
 class Agent:

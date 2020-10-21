@@ -1,14 +1,110 @@
+from enum import Enum
 from queue import Queue
 from random import choice, randint, shuffle
 
 import numpy as np
 
-from game.suit import Suit, SUITS
-
 NUM_PLAYERS = 4
 NUM_CARD = 40
 NUM_ROUNDS = NUM_CARD / 2
 STARTING_CHIPS = 250
+
+
+class Suit(Enum):
+    CLUBS = 0
+    DIAMONDS = 1
+    HEARTS = 2
+    SPADES = 3
+
+    def opposite(self):
+        if self == Suit.CLUBS:
+            return Suit.SPADES
+        elif self == Suit.DIAMONDS:
+            return Suit.HEARTS
+        elif self == Suit.HEARTS:
+            return Suit.DIAMONDS
+        elif self == Suit.SPADES:
+            return Suit.CLUBS
+
+    def __str__(self):
+        if self == Suit.CLUBS:
+            return 'clubs'
+        elif self == Suit.DIAMONDS:
+            return 'diamonds'
+        elif self == Suit.HEARTS:
+            return 'hearts'
+        elif self == Suit.SPADES:
+            return 'spades'
+
+    def get_abbr(self):
+        if self == Suit.CLUBS:
+            return 'C'
+        elif self == Suit.DIAMONDS:
+            return 'D'
+        elif self == Suit.HEARTS:
+            return 'H'
+        elif self == Suit.SPADES:
+            return 'S'
+
+    @staticmethod
+    def from_abbr(value: str):
+        if value == 'C':
+            return Suit.CLUBS
+        elif value == 'D':
+            return Suit.DIAMONDS
+        elif value == 'H':
+            return Suit.HEARTS
+        elif value == 'S':
+            return Suit.SPADES
+        else:
+            raise ValueError('Invalid suit abbr {}'.format(value))
+
+
+SUITS = [Suit.CLUBS, Suit.DIAMONDS, Suit.HEARTS, Suit.SPADES]
+
+
+class Action:
+    def __init__(self, operation: str, suit, buying_price=None, selling_price=None, notes: str = ''):
+        self.index = 0
+        self.operation = operation
+        self.notes = notes
+        self.suit = suit
+        self.buying_price = buying_price
+        self.selling_price = selling_price
+
+        self.index = None
+        self.buyer = None
+        self.seller = None
+
+    def __eq__(self, o) -> bool:
+        return self.operation == o.operation \
+               and self.suit == o.suit \
+               and self.buying_price == o.buying_price \
+               and self.selling_price == o.selling_price
+
+    @staticmethod
+    def ask(suit: Suit, selling_price: int, notes: str = ''):
+        return Action('ask', suit, None, selling_price, notes)
+
+    @staticmethod
+    def at(suit: Suit, buying_price: int, selling_price: int, notes: str = ''):
+        return Action('at', suit, buying_price, selling_price, notes)
+
+    @staticmethod
+    def bid(suit: Suit, buying_price: int, notes: str = ''):
+        return Action('bid', suit, buying_price, notes)
+
+    @staticmethod
+    def buy(suit: Suit, notes: str = ''):
+        return Action('buy', suit, notes)
+
+    @staticmethod
+    def sell(suit: Suit, notes: str = ''):
+        return Action('sell', suit, notes)
+
+    @staticmethod
+    def passing(notes: str = ''):
+        return Action('pass', None, None, None, notes)
 
 
 class Figgie:
@@ -75,15 +171,15 @@ class Figgie:
         player = self.active_player
         market = self.markets[action.suit.value]
         if action.operation == 'ask':
-            return market.can_ask(player, action.selling_price)[0]
+            return market.can_ask(player, action.selling_price)
         elif action.operation == 'bid':
-            return market.can_bid(player, action.buying_price)[0]
+            return market.can_bid(player, action.buying_price)
         elif action.operation == 'buy':
-            return market.can_buy(player)[0]
+            return market.can_buy(player)
         elif action.operation == 'sell':
-            return market.can_sell(player)[0]
+            return market.can_sell(player)
         elif action.operation == 'at':
-            return market.can_at(player, action.buying_price, action.selling_price)[0]
+            return market.can_at(player, action.buying_price, action.selling_price)
         elif action.operation == 'pass':
             return True
         else:
@@ -103,12 +199,14 @@ class Figgie:
         elif action.operation == 'buy':
             market = self.markets[action.suit.value]
             action.seller = market.selling_player
+            action.buyer = self.active_player
             action.price = market.selling_price
             market.buy(self.active_player)
             self.clear_markets()
         elif action.operation == 'sell':
             market = self.markets[action.suit.value]
             action.buyer = market.buying_player
+            action.seller = self.active_player
             action.price = market.buying_price
             market.sell(self.active_player)
             self.clear_markets()
@@ -135,7 +233,7 @@ class Figgie:
     def get_utility(self) -> np.ndarray:
         """
         Precondition: the game must be in a terminal state.
-        Returns the utility achieved by all players.
+        Returns a numpy array of the utility achieved by all players.
         """
         utility = np.zeros(4)
         total_awarded = 0
@@ -196,8 +294,7 @@ class Market:
         self.selling_player = None
         self.suit = suit
         self.figgie = figgie
-        self.last_price_sold = None
-        self.last_price_bought = None
+        self.last_price = None
         self.transactions = 0
         self.operations = 0
 
@@ -206,12 +303,14 @@ class Market:
         Resets the market to it's initial state. This should be done at the end of each trial.
         """
         self.clear()
-        self.last_price_sold = None
-        self.last_price_bought = None
+        self.last_price = None
         self.transactions = 0
         self.operations = 0
 
-    def clear(self):
+    def clear(self) -> None:
+        """
+        sets any buying and selling prices to None
+        """
         self.buying_price = None
         self.buying_player = None
         self.selling_price = None
@@ -300,7 +399,7 @@ class Market:
         self.figgie.chips[player] -= self.selling_price
         self.figgie.cards[player][self.suit.value] += 1
 
-        self.last_price_bought = self.selling_price
+        self.last_price = self.selling_price
         self.transactions += 1
         self.operations += 1
 
@@ -315,7 +414,7 @@ class Market:
             return False, 'player does not have the card to sell'
         return True, 'success'
 
-    def sell(self, player: int):
+    def sell(self, player: int) -> None:
         can, reason = self.can_sell(player)
         if not can:
             raise ValueError('player {} can not sell {} to player {} because {}'.format(player, self.suit.name, self.buying_player, reason))
@@ -326,7 +425,7 @@ class Market:
         self.figgie.chips[self.buying_player] -= self.buying_price
         self.figgie.cards[self.buying_player][self.suit.value] += 1
 
-        self.last_price_sold = self.buying_price
+        self.last_price = self.buying_price
         self.transactions += 1
         self.operations += 1
 

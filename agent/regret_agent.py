@@ -1,14 +1,8 @@
 import numpy as np
 
-from game.action.action import Action
-from game.action.ask_action import AskAction
-from game.action.at_action import AtAction
-from game.action.bid_action import BidAction
-from game.action.pass_action import PassAction
-from game.agent.agent import Agent
-from game.agent.modular_agent import ModularAgent
-from game.figgie import Figgie, NUM_PLAYERS
-from game.suit import Suit
+from agent.agent import Agent
+from agent.modular_agent import ModularAgent
+from figgie import Figgie, NUM_PLAYERS, Suit, Action
 
 
 class InfoSetGenerator:
@@ -92,11 +86,11 @@ class RegretAgent(Agent):
     @staticmethod
     def create_action(operation, suit, price) -> Action:
         if operation == 'ask':
-            return AskAction(suit, price)
+            return Action.ask(suit, price)
         elif operation == 'bid':
-            return BidAction(suit, price)
+            return Action.bid(suit, price)
         elif operation == 'at':
-            return AtAction(suit, price[0], price[1])
+            return Action.at(suit, price[0], price[1])
         else:
             raise ValueError('Invalid Operation: {}'.format(operation))
 
@@ -120,11 +114,11 @@ class RegretAgent(Agent):
                 if figgie.can_preform(action):
                     return action
                 else:
-                    return PassAction()
+                    return Action.passing()
             else:
                 self.unknown_states += 1
                 return self.default_agent.get_action(figgie)
-        return PassAction()
+        return Action.passing()
 
     def on_action(self, figgie: Figgie, index: int, action: Action) -> None:
         self.util_model.on_action(figgie, index, action)
@@ -149,7 +143,7 @@ class RegretAgent(Agent):
 
         best_action, best_adv, best_suit = ModularAgent.get_best_market_adv(figgie, utils)
         if best_action is None:
-            figgie.preform(PassAction())
+            figgie.preform(Action.passing())
             return self.__train(figgie, pi, pi_prime, training_player)
         else:
             info_set = self.info_set_generator.generate_info_set(figgie, round(utils[best_suit.value]), best_action,
@@ -177,7 +171,7 @@ class RegretAgent(Agent):
         if figgie.can_preform(action):
             figgie.preform(action)
         else:
-            figgie.preform(PassAction())
+            figgie.preform(Action.passing())
             return self.__train(figgie, pi, pi_prime, training_player)
         self.on_action(figgie, player, action)
         result = self.__train(figgie, pi * strategy[action_index], pi_prime * probability[action_index], training_player) if player == training_player else self.__train(figgie, pi, pi_prime, training_player)

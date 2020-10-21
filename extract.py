@@ -3,7 +3,7 @@ import argparse
 import numpy as np
 from sklearn.linear_model import LinearRegression
 
-from game.suit import Suit
+from figgie import Suit
 from util import load
 
 
@@ -23,7 +23,7 @@ def main():
     print('strategy at: {}'.format(args.strategy))
     print('\tnum info sets: {}'.format(len(game_tree)))
     print('\ttrials trained: {}'.format(trials))
-    print('\tmodel: {}'.format(model.name))
+    print('\tmodels: {}'.format(model.name))
     print('\tinfo set generator: {}'.format(info_set.name))
 
     count_asks = 0

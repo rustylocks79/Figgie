@@ -2,10 +2,10 @@ import argparse
 import time
 
 import util
-from game.agent.modular_agent import *
-from game.agent.regret_agent import RegretAgent
-from game.figgie import Figgie
-from game.model.simple_model import SimpleModel
+from agent.models.simple_model import SimpleModel
+from agent.modular_agent import *
+from agent.regret_agent import RegretAgent
+from figgie import Figgie
 from util import load
 
 
@@ -28,7 +28,7 @@ def main():
     agent = RegretAgent(SimpleModel(), info_set, ModularAgent(SimpleModel(), RandomBuyPricer(), RandomSellPricer()), game_tree=game_tree)
     print('Parameters: ')
     print('\tinfo set: {}'.format(info_set.name))
-    print('\tmodel: {}'.format('simple'))
+    print('\tmodels: {}'.format('simple'))
     print('\titerations: {}'.format(args.iterations))
     print('\ttrials: {}'.format(args.trials))
     print()

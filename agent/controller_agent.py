@@ -1,5 +1,5 @@
-from game.agent.agent import Agent
-from game.figgie import Figgie, SUITS, Suit
+from agent.agent import Agent
+from figgie import Figgie, SUITS, Suit
 
 
 class ControllerAgent(Agent):

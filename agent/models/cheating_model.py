@@ -1,6 +1,5 @@
-from game.figgie import Figgie, NUM_PLAYERS
-from game.model.utility_model import UtilityModel
-from game.suit import Suit
+from agent.models.utility_model import UtilityModel
+from figgie import Figgie, NUM_PLAYERS, Suit
 
 
 class CheatingModel(UtilityModel):

@@ -1,23 +1,23 @@
 import pickle
 
-from game.agent.info_sets import *
-from game.model.cheating_model import CheatingModel
-from game.model.simple_model import SimpleModel
+from agent.info_sets.info_set_h import InfoSetH
+from agent.info_sets.info_set_l import InfoSetL
+from agent.info_sets.info_set_o import InfoSetO
+from agent.info_sets.info_set_std import InfoSetStd
+from agent.info_sets.info_set_t import InfoSetT
+from agent.models.cheating_model import CheatingModel
+from agent.models.simple_model import SimpleModel
 
 models = {
     'simple': SimpleModel(),
     'cheating': CheatingModel()
 }
 
-info_sets = {'std': StandardGenerator('std'),
+info_sets = {'std': InfoSetStd('std'),
              'h': InfoSetH(),
              't': InfoSetT(),
              'l': InfoSetL(),
-             'o': InfoSetO(),
-             'ht': InfoSetHT(),
-             'hl': InfoSetHL(),
-             'tl': InfoSetTL(),
-             'htl': InfoSetHTL()}
+             'o': InfoSetO()}
 
 
 def load(file_name: str) -> tuple:

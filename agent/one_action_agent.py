@@ -1,6 +1,6 @@
-from game.action.action import Action
-from game.agent.agent import Agent
-from game.figgie import Figgie
+from agent.agent import Agent
+from figgie import Action
+from figgie import Figgie
 
 
 class OneActionAgent(Agent):

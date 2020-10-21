@@ -1,8 +1,5 @@
-from numba import njit
-
-from game.figgie import Figgie
-from game.model.utility_model import UtilityModel
-from game.suit import Suit, SUITS
+from agent.models.utility_model import UtilityModel
+from figgie import Figgie, Suit, SUITS
 
 PROBABILITY_8_CARD_GOAL_SUIT = .33
 PROBABILITY_10_CARD_GOAL_SUIT = .67
@@ -25,7 +22,6 @@ class SimpleModel(UtilityModel):
         return max(result, 0)
 
     @staticmethod
-    @njit()
     def get_expected_from_pot(cards: int) -> float:
         """
         :param cards: the number of cards the agent has of one suit

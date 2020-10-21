@@ -1,10 +1,9 @@
 import numpy as np
 
-from game.action.action import Action
-from game.figgie import Figgie
-from game.model.simple_model import SimpleModel
-from game.model.utility_model import UtilityModel
-from game.suit import SUITS, Suit
+from agent.models.simple_model import SimpleModel
+from agent.models.utility_model import UtilityModel
+from figgie import Action, SUITS, Suit
+from figgie import Figgie
 
 
 class HistoryModel(UtilityModel):

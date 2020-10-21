@@ -1,14 +1,8 @@
 from random import choice, randint, shuffle
 
-from game.action.action import Action
-from game.action.ask_action import AskAction
-from game.action.at_action import AtAction
-from game.action.bid_action import BidAction
-from game.action.buy_action import BuyAction
-from game.action.pass_action import PassAction
-from game.action.sell_action import SellAction
-from game.agent.agent import Agent
-from game.figgie import Figgie, Suit
+from agent.agent import Agent
+from figgie import Action
+from figgie import Figgie, Suit
 
 MAX_PRICE = 30  # TODO: come up with formula
 
@@ -38,18 +32,18 @@ class RandomAgent(Agent):
                 action_suit = suit
                 break
         if len(operations) == 0:
-            return PassAction()
+            return Action.passing()
         operation = choice(operations)
         market = figgie.markets[action_suit.value]
         if operation == 'ask':
-            return AskAction(action_suit, randint(1, market.selling_price - 1 if market.selling_price is not None else MAX_PRICE))
+            return Action.ask(action_suit, randint(1, market.selling_price - 1 if market.selling_price is not None else MAX_PRICE))
         elif operation == 'bid':
-            return BidAction(action_suit, randint(market.buying_price + 1 if market.buying_price is not None else 1, MAX_PRICE))
+            return Action.bid(action_suit, randint(market.buying_price + 1 if market.buying_price is not None else 1, MAX_PRICE))
         elif operation == 'buy':
-            return BuyAction(action_suit)
+            return Action.buy(action_suit)
         elif operation == 'sell':
-            return SellAction(action_suit)
+            return Action.sell(action_suit)
         elif operation == 'at':
             buying_price = randint(market.buying_price + 1 if market.buying_price is not None else 1, MAX_PRICE)
             selling_price = randint(1, market.selling_price - 1 if market.selling_price is not None else MAX_PRICE)
-            return AtAction(action_suit, buying_price, selling_price)
+            return Action.at(action_suit, buying_price, selling_price)

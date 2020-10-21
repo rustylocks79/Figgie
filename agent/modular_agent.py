@@ -2,17 +2,9 @@ from random import randint
 
 import numpy as np
 
-from game.action.action import Action
-from game.action.ask_action import AskAction
-from game.action.at_action import AtAction
-from game.action.bid_action import BidAction
-from game.action.buy_action import BuyAction
-from game.action.pass_action import PassAction
-from game.action.sell_action import SellAction
-from game.agent.agent import Agent
-from game.figgie import Figgie, Suit
-from game.model.utility_model import UtilityModel
-from game.suit import SUITS
+from agent.agent import Agent
+from agent.models.utility_model import UtilityModel
+from figgie import Figgie, Suit, Action, SUITS
 
 
 class BuyPricer:
@@ -88,11 +80,11 @@ class ModularAgent(Agent):
             market = figgie.markets[best_suit.value]
             if best_action == 'buy':
                 assert market.can_buy(player)[0], market.can_buy(player)[1]
-                return BuyAction(best_suit,
+                return Action.buy(best_suit,
                                  notes='with exp util: {}, adv: {}'.format(utils[best_suit.value], best_adv))
             elif best_action == 'sell':
                 assert market.can_sell(player)[0], market.can_sell(player)[1]
-                return SellAction(best_suit,
+                return Action.sell(best_suit,
                                   notes='with exp util: {}, adv: {}'.format(utils[best_suit.value], best_adv))
             else:
                 raise ValueError('Best action can not be: {}'.format(best_action))
@@ -155,26 +147,26 @@ class ModularAgent(Agent):
             if best_action == 'bid':
                 bidding_price = int(self.buy_pricer.get_buying_price(figgie, best_suit, utils[best_suit.value]))
                 if market.can_bid(player, bidding_price)[0]:
-                    return BidAction(best_suit, bidding_price)
+                    return Action.bid(best_suit, bidding_price)
                 else:
-                    return PassAction()
+                    return Action.passing()
             elif best_action == 'ask':
                 asking_price = int(self.sell_pricer.get_selling_price(figgie, best_suit, utils[best_suit.value]))
                 if market.can_ask(player, asking_price)[0]:
-                    return AskAction(best_suit, asking_price)
+                    return Action.ask(best_suit, asking_price)
                 else:
-                    return PassAction()
+                    return Action.passing()
             elif best_action == 'at':
                 bidding_price = int(self.buy_pricer.get_buying_price(figgie, best_suit, utils[best_suit.value]))
                 asking_price = int(self.sell_pricer.get_selling_price(figgie, best_suit, utils[best_suit.value]))
                 if market.can_at(player, bidding_price, asking_price)[0]:
-                    return AtAction(best_suit, bidding_price, asking_price)
+                    return Action.at(best_suit, bidding_price, asking_price)
                 else:
-                    return PassAction()
+                    return Action.passing()
             else:
                 raise ValueError('Best action can not be: {}'.format(best_action))
 
-        return PassAction()
+        return Action.passing()
 
     def on_action(self, figgie: Figgie, index: int, action: Action) -> None:
         self.util_model.on_action(figgie, index, action)

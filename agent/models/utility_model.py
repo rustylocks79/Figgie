@@ -1,5 +1,4 @@
-from game.action.action import Action
-from game.figgie import Suit, Figgie
+from figgie import Suit, Figgie, Action
 
 
 class UtilityModel:
