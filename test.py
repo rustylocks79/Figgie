@@ -4,6 +4,8 @@ import time
 from agent.info_sets.info_set_std import InfoSetStd
 from agent.models.simple_model import SimpleModel
 from agent.modular_agent import *
+from agent.pricers.half_pricer import HalfPricer
+from agent.pricers.random_pricer import RandomPricer
 from agent.regret_agent import RegretAgent
 from figgie import Figgie
 from util import load
@@ -48,16 +50,16 @@ def main():
     print('\t\tinfo set generator: {}'.format(info_set.name))
 
     if args.mode == 'm':
-        agents = [ModularAgent(SimpleModel(), MarketBuyPricer(), MarketSellPricer()),
-                  ModularAgent(SimpleModel(), UtilBuyPricer(), UtilSellPricer()),
-                  ModularAgent(SimpleModel(), RandomBuyPricer(), RandomSellPricer()),
-                  RegretAgent(model, info_set, ModularAgent(SimpleModel(), HalfBuyPricer(), HalfSellPricer()), game_tree=game_tree)]
+        agents = [ModularAgent(SimpleModel(), RandomPricer()),
+                  ModularAgent(SimpleModel(), RandomPricer()),
+                  ModularAgent(SimpleModel(), RandomPricer()),
+                  RegretAgent(model, info_set, ModularAgent(SimpleModel(), HalfPricer()), game_tree=game_tree)]
     else:
         std_game_tree, _, _, _ = load('strategies/strat_1000000_simple_std.pickle')
-        agents = [RegretAgent(SimpleModel(), InfoSetStd('std'), ModularAgent(SimpleModel(), HalfBuyPricer(), HalfSellPricer()), game_tree=std_game_tree),
-                  RegretAgent(SimpleModel(), InfoSetStd('std'), ModularAgent(SimpleModel(), HalfBuyPricer(), HalfSellPricer()), game_tree=std_game_tree),
-                  RegretAgent(SimpleModel(), InfoSetStd('std'), ModularAgent(SimpleModel(), HalfBuyPricer(), HalfSellPricer()), game_tree=std_game_tree),
-                  RegretAgent(model, info_set, ModularAgent(SimpleModel(), HalfBuyPricer(), HalfSellPricer()), game_tree=game_tree)]
+        agents = [RegretAgent(SimpleModel(), InfoSetStd('std'), ModularAgent(SimpleModel(), HalfPricer()), game_tree=std_game_tree),
+                  RegretAgent(SimpleModel(), InfoSetStd('std'), ModularAgent(SimpleModel(), HalfPricer()), game_tree=std_game_tree),
+                  RegretAgent(SimpleModel(), InfoSetStd('std'), ModularAgent(SimpleModel(), HalfPricer()), game_tree=std_game_tree),
+                  RegretAgent(model, info_set, ModularAgent(SimpleModel(), HalfPricer()), game_tree=game_tree)]
 
     test(figgie, agents, args.trials, args.verbose)
 

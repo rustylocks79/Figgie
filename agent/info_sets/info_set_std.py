@@ -20,15 +20,15 @@ class InfoSetStd(InfoSetGenerator):
         else:
             raise ValueError("Invalid action: {}".format(target_operation))
 
-    def generate_bid_actions(self, card_util: int, buying_price: int, target_suit: Suit) -> np.ndarray:
+    def generate_bid_actions(self, card_util: float, buying_price: int, target_suit: Suit) -> np.ndarray:
         min_buy = buying_price + 1 if buying_price is not None else 1
         return np.arange(min_buy, min_buy + 8, dtype=np.int32)
 
-    def generate_ask_actions(self, card_util: int, selling_price: int, target_suit: Suit) -> np.ndarray:
+    def generate_ask_actions(self, card_util: float, selling_price: int, target_suit: Suit) -> np.ndarray:
         max_sell = selling_price if selling_price is not None else int(card_util) + 8
         return np.arange(max(max_sell - 8, 1), max_sell, dtype=np.int32)
 
-    def generate_at_actions(self, card_util: int, buying_price: int, selling_price: int, target_suit: Suit) -> np.ndarray:
+    def generate_at_actions(self, card_util: float, buying_price: int, selling_price: int, target_suit: Suit) -> np.ndarray:
         actions = []
         min_buy = buying_price + 1 if buying_price is not None else 1
         max_sell = selling_price if selling_price is not None else int(card_util) + 8

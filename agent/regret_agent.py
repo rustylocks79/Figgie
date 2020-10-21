@@ -23,13 +23,13 @@ class InfoSetGenerator:
         else:
             raise ValueError('Best action can not be: {}'.format(target_suit))
 
-    def generate_bid_actions(self, card_util: int, buying_price: int, target_suit: Suit) -> np.ndarray:
+    def generate_bid_actions(self, card_util: float, buying_price: int, target_suit: Suit) -> np.ndarray:
         pass
 
-    def generate_ask_actions(self, card_util: int, selling_price: int, target_suit: Suit) -> np.ndarray:
+    def generate_ask_actions(self, card_util: float, selling_price: int, target_suit: Suit) -> np.ndarray:
         pass
 
-    def generate_at_actions(self, card_util: int, buying_price: int, selling_price: int, target_suit: Suit) -> np.ndarray:
+    def generate_at_actions(self, card_util: float, buying_price: int, selling_price: int, target_suit: Suit) -> np.ndarray:
         pass
 
 
@@ -95,7 +95,10 @@ class RegretAgent(Agent):
             raise ValueError('Invalid Operation: {}'.format(operation))
 
     def get_action(self, figgie, training_mode: bool = False) -> Action:
-        utils = ModularAgent.calc_card_utils(self, figgie)
+        player = figgie.active_player
+        utils = self.util_model.get_card_utility(figgie, player)
+        actual_utils = self.cheating_model.get_card_utility(figgie, player)
+        self.add_prediction(utils, actual_utils)
         best_transaction = ModularAgent.get_best_transaction(figgie, utils)
         if best_transaction is not None:
             return best_transaction
@@ -135,7 +138,8 @@ class RegretAgent(Agent):
             utility = figgie.get_utility()
             return utility[player] / pi_prime, 1.0
 
-        utils = ModularAgent.calc_card_utils(self, figgie)
+        player = figgie.active_player
+        utils = self.util_model.get_card_utility(figgie, player)
         best_transaction = ModularAgent.get_best_transaction(figgie, utils)
         if best_transaction is not None:
             figgie.preform(best_transaction)

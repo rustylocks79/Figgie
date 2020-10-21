@@ -1,5 +1,7 @@
 from math import sqrt
 
+import numpy as np
+
 from agent.models.cheating_model import CheatingModel
 from figgie import Figgie, Action
 
@@ -33,9 +35,10 @@ class Agent:
     def reset(self) -> None:
         pass
 
-    def add_prediction(self, model_prediction, actual) -> None:
-        self.total_error += pow(actual - model_prediction, 2)
-        self.trails += 1
+    def add_prediction(self, model_utils: np.ndarray, actual_utils: np.ndarray) -> None:
+        for i in range(len(model_utils)):
+            self.total_error += pow(actual_utils[i] - model_utils[i], 2)
+        self.trails += len(model_utils)
 
     def get_rmse(self) -> float:
         if self.trails == 0:

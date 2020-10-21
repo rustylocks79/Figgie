@@ -8,6 +8,7 @@ class SimpleModel(UtilityModel):
     def __init__(self):
         super().__init__('simple')
         self.pot_rewards = {
+            11: 1000,           # conceptually this makes no sense but making this so high ensure the model will not encourage the agent to sell goal cards.
             10: 10 * 10 + 100,  # [cards] * 10 + [10 pot]
             9: 9 * 10 + 100,    # [cards] * 10 + [10 pot]
             8: 8 * 10 + .33 * 120 + .67 * 100,   # [cards] * 10 + [prob. 8 goal] * [8 pot] + [prob. 10 goal] * [10 pot]
@@ -33,7 +34,7 @@ class SimpleModel(UtilityModel):
             2: 2 * 10 + .33 * (1/28 * 120/4),
 
             1: 10,     # 1 * 10
-            0: 0       # 0 * 10
+            0: 0,      # 0 * 10
         }
 
     def get_card_utility(self, figgie: Figgie, index: int) -> np.ndarray:
@@ -41,8 +42,9 @@ class SimpleModel(UtilityModel):
         result = np.full(4, 0, dtype=float)
         for s in SUITS:
             if hand[s.value] > 10:
-                result[s.opposite().value] = self.pot_rewards[hand[s.opposite().value + 1]] - self.pot_rewards[hand[s.opposite().value]]
+                goal_suit = s.opposite()
+                result[goal_suit.value] = (self.pot_rewards[hand[goal_suit.value] + 1] - self.pot_rewards[hand[goal_suit.value]])
                 return result
         for s in SUITS:
-            result[s.value] = self.pot_rewards[hand[s.value] + 1] - self.pot_rewards[hand[s.value]]
+            result[s.value] = (self.pot_rewards[hand[s.value] + 1] - self.pot_rewards[hand[s.value]])
         return .25 * result

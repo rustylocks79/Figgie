@@ -4,6 +4,7 @@ import time
 import util
 from agent.models.simple_model import SimpleModel
 from agent.modular_agent import *
+from agent.pricers.random_pricer import RandomPricer
 from agent.regret_agent import RegretAgent
 from figgie import Figgie
 from util import load
@@ -25,7 +26,7 @@ def main():
         trials = 0
         info_set = util.info_sets[args.generator]
 
-    agent = RegretAgent(SimpleModel(), info_set, ModularAgent(SimpleModel(), RandomBuyPricer(), RandomSellPricer()), game_tree=game_tree)
+    agent = RegretAgent(SimpleModel(), info_set, ModularAgent(SimpleModel(), RandomPricer()), game_tree=game_tree)
     print('Parameters: ')
     print('\tinfo set: {}'.format(info_set.name))
     print('\tmodels: {}'.format('simple'))
