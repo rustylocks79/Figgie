@@ -34,7 +34,6 @@ def main():
     parser.add_argument('-v', '--verbose', type=bool, default=False, help='output actions')
     parser.add_argument('-s', '--strategy', type=str, default='strategies/strat_10000_simple_std.pickle', help='the regret agent strategy')
     parser.add_argument('-m', '--mode', type=str, default='m', help='r for regret opponents, m for modular opponents. ')
-    parser.add_argument()
     args = parser.parse_args()
 
     figgie = Figgie()

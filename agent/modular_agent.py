@@ -43,12 +43,10 @@ class ModularAgent(Agent):
     @staticmethod
     def calc_card_utils(agent: Agent, figgie: Figgie) -> np.ndarray:
         player = figgie.active_player
-        utils = np.full(4, 0, dtype=float)
+        utils = agent.util_model.get_card_utility(figgie, player)
+        actual_utils = agent.cheating_model.get_card_utility(figgie, player)
         for suit in SUITS:
-            card_util = round(agent.util_model.get_card_utility(figgie, player, suit))
-            actual_util = round(agent.cheating_model.get_card_utility(figgie, player, suit))
-            agent.add_prediction(card_util, actual_util)
-            utils[suit.value] = card_util
+            agent.add_prediction(utils[suit.value], actual_utils[suit.value])
         return utils
 
     @staticmethod
@@ -173,54 +171,54 @@ class ModularAgent(Agent):
 
 
 class UtilBuyPricer(BuyPricer):
-    def get_buying_price(self, figgie: Figgie, suit: Suit, card_util: int) -> int:
-        return max(card_util - 1, 1)
+    def get_buying_price(self, figgie: Figgie, suit: Suit, card_util: float) -> int:
+        return max(round(card_util - 1), 1)
 
 
 class UtilSellPricer(SellPricer):
-    def get_selling_price(self, figgie: Figgie, suit: Suit, card_util: int) -> int:
-        return max(card_util + 1, 1)
+    def get_selling_price(self, figgie: Figgie, suit: Suit, card_util: float) -> int:
+        return max(round(card_util + 1), 1)
 
 
 class MarketBuyPricer(BuyPricer):
-    def get_buying_price(self, figgie: Figgie, suit: Suit, card_util: int) -> int:
+    def get_buying_price(self, figgie: Figgie, suit: Suit, card_util: float) -> int:
         market = figgie.markets[suit.value]
         if market.has_buyer():
             return market.buying_price + 1
         else:
-            return max(card_util - 1, 1)
+            return max(round(card_util - 1), 1)
 
 
 class MarketSellPricer(SellPricer):
-    def get_selling_price(self, figgie: Figgie, suit: Suit, card_util: int) -> int:
+    def get_selling_price(self, figgie: Figgie, suit: Suit, card_util: float) -> int:
         market = figgie.markets[suit.value]
         if market.has_seller():
             return market.selling_price - 1
         else:
-            return max(card_util + 1, 1)
+            return max(round(card_util + 1), 1)
 
 
 class HalfBuyPricer(BuyPricer):
-    def get_buying_price(self, figgie: Figgie, suit: Suit, card_util: int) -> int:
+    def get_buying_price(self, figgie: Figgie, suit: Suit, card_util: float) -> int:
         market = figgie.markets[suit.value]
         minimum = market.buying_price if market.has_buyer() else 0
-        return ((card_util - minimum) // 2) + minimum
+        return (round(card_util - minimum) // 2) + minimum
 
 
 class HalfSellPricer(SellPricer):
-    def get_selling_price(self, figgie: Figgie, suit: Suit, card_util: int) -> int:
+    def get_selling_price(self, figgie: Figgie, suit: Suit, card_util: float) -> int:
         market = figgie.markets[suit.value]
-        maximum = market.selling_price if market.has_seller() else card_util * 2
-        return maximum - ((maximum - card_util) // 2)
+        maximum = market.selling_price if market.has_seller() else round(card_util * 2)
+        return maximum - (round(maximum - card_util) // 2)
 
 
 class RandomBuyPricer(BuyPricer):
-    def get_buying_price(self, figgie: Figgie, suit: Suit, card_util: int) -> int:
+    def get_buying_price(self, figgie: Figgie, suit: Suit, card_util: float) -> int:
         market = figgie.markets[suit.value]
-        return randint(market.buying_price + 1 if market.has_buyer() else 1, card_util)
+        return randint(market.buying_price + 1 if market.has_buyer() else 1, round(card_util))
 
 
 class RandomSellPricer(SellPricer):
-    def get_selling_price(self, figgie: Figgie, suit: Suit, card_util: int) -> int:
+    def get_selling_price(self, figgie: Figgie, suit: Suit, card_util: float) -> int:
         market = figgie.markets[suit.value]
-        return randint(card_util + 1, market.selling_price - 1 if market.has_seller() else card_util * 2)
+        return randint(round(card_util), market.selling_price - 1 if market.has_seller() else round(card_util * 2))
