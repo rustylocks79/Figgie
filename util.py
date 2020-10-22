@@ -5,12 +5,10 @@ from agent.info_sets.info_set_l import InfoSetL
 from agent.info_sets.info_set_o import InfoSetO
 from agent.info_sets.info_set_std import InfoSetStd
 from agent.info_sets.info_set_t import InfoSetT
-from agent.models.cheating_model import CheatingModel
 from agent.models.simple_model import SimpleModel
 
 models = {
-    'simple': SimpleModel(),
-    'cheating': CheatingModel()
+    'simple': SimpleModel()
 }
 
 info_sets = {'std': InfoSetStd('std'),

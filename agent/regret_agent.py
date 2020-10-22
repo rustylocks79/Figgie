@@ -1,6 +1,7 @@
 import numpy as np
 
 from agent.agent import Agent
+from agent.choosers.simple_chooser import SimpleChooser
 from agent.modular_agent import ModularAgent
 from figgie import Figgie, NUM_PLAYERS, Suit, Action
 
@@ -37,6 +38,7 @@ class GameNode:
     def __init__(self, num_actions: int):
         self.sum_regret = np.zeros(num_actions, dtype=float)
         self.sum_strategy = np.zeros(num_actions, dtype=float)
+        self.observations = 0
 
     def get_strategy(self) -> np.ndarray:
         total = np.sum(self.sum_regret, where=self.sum_regret > 0)
@@ -69,13 +71,14 @@ class GameNode:
 
 
 class RegretAgent(Agent):
-    def __init__(self, util_model, info_set_generator: InfoSetGenerator, default_agent: Agent, game_tree: dict = None):
-        super().__init__('Regret Agent')
+    def __init__(self, util_model, chooser: SimpleChooser, info_set_generator: InfoSetGenerator, default_agent: Agent, game_tree: dict = None, collector=False):
+        super().__init__('Regret Agent', collector=collector)
         if game_tree is None:
             game_tree = {}
         self.game_tree = game_tree
         self.unknown_states = 0
         self.util_model = util_model
+        self.chooser = chooser
         self.info_set_generator = info_set_generator
         self.default_agent = default_agent
 
@@ -97,13 +100,12 @@ class RegretAgent(Agent):
     def get_action(self, figgie, training_mode: bool = False) -> Action:
         player = figgie.active_player
         utils = self.util_model.get_card_utility(figgie, player)
-        actual_utils = self.cheating_model.get_card_utility(figgie, player)
-        self.add_prediction(utils, actual_utils)
+        self.collect(figgie)
         best_transaction = ModularAgent.get_best_transaction(figgie, utils)
         if best_transaction is not None:
             return best_transaction
 
-        best_action, best_adv, best_suit = ModularAgent.get_best_market_adv(figgie, utils)
+        best_action, best_adv, best_suit = self.chooser.get_best_market_adv(figgie, utils)
         if best_action is not None:
             info_set = self.info_set_generator.generate_info_set(figgie, round(utils[best_suit.value]), best_action,
                                                                  best_suit)
@@ -145,7 +147,7 @@ class RegretAgent(Agent):
             figgie.preform(best_transaction)
             return self.__train(figgie, pi, pi_prime, training_player)
 
-        best_action, best_adv, best_suit = ModularAgent.get_best_market_adv(figgie, utils)
+        best_action, best_adv, best_suit = self.chooser.get_best_market_adv(figgie, utils)
         if best_action is None:
             figgie.preform(Action.passing())
             return self.__train(figgie, pi, pi_prime, training_player)
@@ -189,6 +191,8 @@ class RegretAgent(Agent):
             node.sum_regret += regret
         else:
             node.sum_strategy += strategy / pi_prime
+
+        node.observations += 1
 
         if player == training_player:
             return util, p_tail * strategy[action_index]

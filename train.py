@@ -1,5 +1,6 @@
 import argparse
 import time
+from statistics import median
 
 import util
 from agent.models.simple_model import SimpleModel
@@ -26,7 +27,7 @@ def main():
         trials = 0
         info_set = util.info_sets[args.generator]
 
-    agent = RegretAgent(SimpleModel(), info_set, ModularAgent(SimpleModel(), RandomPricer()), game_tree=game_tree)
+    agent = RegretAgent(SimpleModel(), SimpleChooser(), info_set, ModularAgent(SimpleModel(), SimpleChooser(), RandomPricer()), game_tree=game_tree)
     print('Parameters: ')
     print('\tinfo set: {}'.format(info_set.name))
     print('\tmodels: {}'.format('simple'))
@@ -44,6 +45,15 @@ def main():
 
         print('\tStrategy: ')
         print('\t\tinfo sets: {}'.format(len(agent.game_tree)))
+
+        observations = [x.observations for x in agent.game_tree.values()]
+        mean = sum(observations) / len(observations)
+        variance = sum([((x - mean) ** 2) for x in observations]) / len(observations)
+        dev = variance ** 0.5
+
+        print('\t\tavg operations: {}'.format(mean))
+        print('\t\tmedian operations: {}'.format(median(observations)))
+        print('\t\tstd dev. operations: {}'.format(dev))
 
         start_time = time.process_time()
         file_name = util.save(agent.game_tree, trials + args.trials * i, 'simple', info_set.name)

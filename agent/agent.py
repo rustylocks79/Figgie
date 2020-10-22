@@ -1,20 +1,18 @@
-from math import sqrt
-
 import numpy as np
 
-from agent.models.cheating_model import CheatingModel
 from figgie import Figgie, Action
 
 
 class Agent:
-    def __init__(self, name):
+    def __init__(self, name, collector=False):
         self.name = name
         self.wins = 0
         self.total_utility = 0
         self.total_error = 0
         self.trails = 0
-        self.cheating_model = CheatingModel()
         self.operations = {}
+        self.training_data = []
+        self.collector = collector
 
     def get_action(self, figgie: Figgie) -> Action:
         """
@@ -35,21 +33,21 @@ class Agent:
     def reset(self) -> None:
         pass
 
-    def add_prediction(self, model_utils: np.ndarray, actual_utils: np.ndarray) -> None:
-        for i in range(len(model_utils)):
-            self.total_error += pow(actual_utils[i] - model_utils[i], 2)
-        self.trails += len(model_utils)
-
-    def get_rmse(self) -> float:
-        if self.trails == 0:
-            return 0
-        return sqrt(self.total_error / self.trails)
+    def collect(self, figgie: Figgie):
+        if self.collector:
+            self.training_data.append((
+                np.array([
+                    [cards for cards in figgie.cards[figgie.active_player]],
+                    [market.buying_price if market.buying_price is not None else 0 for market in figgie.markets],
+                    [market.selling_price if market.selling_price is not None else 0 for market in figgie.markets],
+                    [market.last_price if market.last_price is not None else 0 for market in figgie.markets],
+                    [market.operations for market in figgie.markets],
+                    [market.transactions for market in figgie.markets],
+                ], dtype=np.float32).flatten(), figgie.goal_suit.value
+            ))
 
     def get_avg_operations(self, trials) -> dict:
         result = {}
         for key in self.operations:
             result[key] = self.operations[key] / trials
         return result
-
-
-
