@@ -1,0 +1,7 @@
+{
+  "mode": "train",
+  "iterations": 1,
+  "trials": 1000000,
+  "info_set": "std",
+  "model": "simple"
+}

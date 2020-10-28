@@ -7,7 +7,7 @@ from train_model import Net
 
 
 class AnnModel(UtilityModel):
-    def __init__(self):
+    def __init__(self, path):
         super().__init__('ann')
         self.pot_rewards = {
             11: 1000,           # conceptually this makes no sense but making this so high ensure the model will not encourage the agent to sell goal cards.
@@ -39,7 +39,7 @@ class AnnModel(UtilityModel):
             0: 0,      # 0 * 10
         }
         self.model = Net()
-        self.model.load_state_dict(torch.load('ann/my_model.pt'))
+        self.model.load_state_dict(torch.load(path))
         self.model.eval()
 
     def get_card_utility(self, figgie: Figgie, index: int) -> np.ndarray:

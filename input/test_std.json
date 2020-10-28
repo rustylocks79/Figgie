@@ -1,0 +1,29 @@
+{
+  "mode": "test",
+  "trials": 10000,
+  "verbose": "False",
+  "agents": [
+    {
+      "type": "modular",
+      "model": "simple",
+      "pricer": "half"
+    },
+    {
+      "type": "modular",
+      "model": "simple",
+      "pricer": "random"
+    },
+    {
+      "type": "modular",
+      "model": "simple",
+      "pricer": "faded"
+    },
+    {
+      "type": "regret",
+      "model": "simple",
+      "info_set": "std",
+      "strategy": "strategies/strat_100_simple_std.pickle",
+      "collect": "True"
+    }
+  ]
+}
