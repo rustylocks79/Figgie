@@ -123,6 +123,11 @@ def test(agents: list, trials: int, verbose=False):
         if isinstance(agent, RegretAgent):
             print('\tavg unknown states: {}, unknown states: {}'.format(agent.unknown_states / trials, agent.unknown_states))
 
+    for agent in agents:  # TODO: better naming
+        if agent.collector:
+            with open('ann/data_{}.pickle'.format(agent.name)) as file:
+                pickle.dump(agent.training_data, file)
+
 
 def main():
     parser = argparse.ArgumentParser(description='Train a strategy using CFR')
