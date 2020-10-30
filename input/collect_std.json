@@ -1,6 +1,6 @@
 {
   "mode": "test",
-  "trials": 10000,
+  "trials": 1000000,
   "verbose": "False",
   "agents": [
     {
@@ -23,6 +23,7 @@
       "model": "simple",
       "info_set": "std",
       "strategy": "strategies/strat_1000000_simple_std.pickle",
+      "collect": "True"
     }
   ]
 }
