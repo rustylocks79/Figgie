@@ -1,3 +1,4 @@
+import argparse
 import pickle
 
 import torch.optim
@@ -25,8 +26,13 @@ class Net(Module):
         x = log_softmax(self.fc4(x), dim=1)
         return x
 
+
 if __name__ == '__main__':
-    with open('training_data.pickle', 'rb') as file:
+    parser = argparse.ArgumentParser(description='Train a strategy using CFR')
+    parser.add_argument('-in', '--input', type=str, help='the data')
+    parser.add_argument('-out', '--output', type=str, help='where to store the model')
+    args = parser.parse_args()
+    with open(args.input, 'rb') as file:
         all_data = pickle.load(file)
 
 
@@ -77,4 +83,4 @@ if __name__ == '__main__':
 
     print("Accuracy: ", round(correct/total, 3))
 
-    torch.save(net.state_dict(), 'ann/my_model.pt')
+    torch.save(net.state_dict(), args.output)
