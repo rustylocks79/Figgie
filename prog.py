@@ -125,7 +125,7 @@ def test(agents: list, trials: int, verbose=False):
 
     for agent in agents:  # TODO: better naming
         if agent.collector:
-            with open('ann/data_{}.pickle'.format(agent.name)) as file:
+            with open('ann/training_data.pickle'.format(agent.name)) as file:
                 pickle.dump(agent.training_data, file)
 
 
