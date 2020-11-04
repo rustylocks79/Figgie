@@ -45,6 +45,7 @@ pricers = {'half': HalfPricer(),
            'random': RandomPricer(),
            "faded": FadedPricer()}
 
+
 def get_model(parameters: dict) -> UtilityModel:
     model = parameters['model']
     if model == 'simple':
@@ -123,9 +124,9 @@ def test(agents: list, trials: int, verbose=False):
         if isinstance(agent, RegretAgent):
             print('\tavg unknown states: {}, unknown states: {}'.format(agent.unknown_states / trials, agent.unknown_states))
 
-    for agent in agents:  # TODO: better naming
+    for agent in agents:
         if agent.collector:
-            with open('ann/training_data.pickle'.format(agent.name), 'wb') as file:
+            with open('ann/training_data.pickle', 'wb') as file:
                 pickle.dump(agent.training_data, file)
 
 
