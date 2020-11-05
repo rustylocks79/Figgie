@@ -67,7 +67,7 @@ def test(model, data_loader):
 
 
 def train_figgie(config, checkpoint_dir=None):
-    with open(r"C:\CompSci\Figgie\ann\training_data.pickle", 'rb') as file:
+    with open(r"/home/jmd6724/Documents/Figgie/ann/training_data.pickle", 'rb') as file:
         all_data = pickle.load(file)
     point = int(9 / 10 * len(all_data))
     train_data = FiggieDataSet(all_data[:point])
@@ -85,8 +85,9 @@ def train_figgie(config, checkpoint_dir=None):
         tune.report(mean_accuracty=acc)
 
         if epoch % 5 == 0:
-            torch.save(model.state_dict(), r"C:\CompSci\Figgie\ann\model_{}_{}_{}_{}.pth"
+            torch.save(model.state_dict(), r"/home/jmd6724/Documents/Figgie/ann/model_{}_{}_{}_{}.pth"
                        .format(config['l1'], config['l2'], config['l3'], acc))
+
 
 def main():
     parser = argparse.ArgumentParser(description='Train a strategy using CFR')
