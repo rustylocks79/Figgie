@@ -38,7 +38,7 @@ class AnnModel(UtilityModel):
             1: 10,     # 1 * 10
             0: 0,      # 0 * 10
         }
-        self.model = Net()
+        self.model = Net(32, 16, 64)  # TODO don't hard code these
         self.model.load_state_dict(torch.load(path))
         self.model.eval()
 
