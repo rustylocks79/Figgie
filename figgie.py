@@ -171,15 +171,15 @@ class Figgie:
         player = self.active_player
         market = self.markets[action.suit.value]
         if action.operation == 'ask':
-            return market.can_ask(player, action.selling_price)
+            return market.can_ask(player, action.selling_price)[0]
         elif action.operation == 'bid':
-            return market.can_bid(player, action.buying_price)
+            return market.can_bid(player, action.buying_price)[0]
         elif action.operation == 'buy':
-            return market.can_buy(player)
+            return market.can_buy(player)[0]
         elif action.operation == 'sell':
-            return market.can_sell(player)
+            return market.can_sell(player)[0]
         elif action.operation == 'at':
-            return market.can_at(player, action.buying_price, action.selling_price)
+            return market.can_at(player, action.buying_price, action.selling_price)[0]
         elif action.operation == 'pass':
             return True
         else:
