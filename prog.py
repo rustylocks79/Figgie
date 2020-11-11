@@ -101,7 +101,7 @@ def train(iterations: int, trials: int, prev_trials: int, info_set: InfoSetGener
         print('\t\tstd dev. operations: {}'.format(dev))
 
         start_time = time.process_time()
-        file_name = save(agent.game_tree, prev_trials + trials * i, 'simple', info_set.name)
+        file_name = save(agent.game_tree, prev_trials + trials * i, agent.util_model.name, info_set.name)
         total_time = time.process_time() - start_time
         print('\tSaving to {} took {} seconds'.format(file_name, total_time))
 
