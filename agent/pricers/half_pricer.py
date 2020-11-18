@@ -16,7 +16,7 @@ class HalfPricer(Pricer):
 
     def get_asking_price(self, figgie: Figgie, suit: Suit, utils: np.ndarray) -> Optional[int]:
         market = figgie.markets[suit.value]
-        minimum = round(utils[suit.value])
+        minimum = max(1, round(utils[suit.value]))
         maximum = market.selling_price - 1 if market.has_seller() else round(utils[suit.value] * 2)
         assert minimum <= maximum
         return maximum - (maximum - minimum) // 2

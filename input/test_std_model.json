@@ -1,6 +1,6 @@
 {
   "mode": "test",
-  "trials": 10000,
+  "trials": 100000,
   "verbose": "False",
   "agents": [
     {
