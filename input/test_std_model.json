@@ -7,26 +7,26 @@
       "type": "regret",
       "model": "simple",
       "info_set": "std",
-      "strategy": "strategies/strat_2000000_simple_std.pickle"
+      "strategy": "strategies/strat_1000000_simple_std.pickle"
     },
     {
       "type": "regret",
       "model": "simple",
       "info_set": "std",
-      "strategy": "strategies/strat_2000000_simple_std.pickle"
+      "strategy": "strategies/strat_1000000_simple_std.pickle"
     },
     {
       "type": "regret",
       "model": "simple",
       "info_set": "std",
-      "strategy": "strategies/strat_2000000_simple_std.pickle"
+      "strategy": "strategies/strat_1000000_simple_std.pickle"
     },
     {
       "type": "regret",
       "model": "ann",
       "model_path": "ann/model.pth",
       "info_set": "std",
-      "strategy": "strategies/strat_2000000_ann_std.pickle"
+      "strategy": "strategies/strat_1000000_ann_std.pickle"
     }
   ]
 }
