@@ -29,7 +29,7 @@
       "model": "ann",
       "model_path": "ann/model.pth",
       "info_set": "o",
-      "strategy": "strategies/strat_8000000_ann_o.pickle"
+      "strategy": "strategies/strat_16000000_ann_o.pickle"
     }
   ]
 }
