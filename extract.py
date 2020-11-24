@@ -106,11 +106,11 @@ def main():
 
     print('ask pricer: ')
     print('\tcount: {}'.format(count_asks))
-    regression = DecisionTreeRegressor(max_depth=5)
+    regression = DecisionTreeRegressor(max_depth=3)
     x = np.array(asking_x)
     y = np.array(asking_y, dtype=np.int32)
     regression.fit(x, y)
-    fig = plt.figure(figsize=(25, 20))
+    fig = plt.figure(figsize=(100, 100))
     tree.plot_tree(regression)
     # fig.show()
     fig.savefig('asking_tree.png')
