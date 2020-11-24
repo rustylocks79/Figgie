@@ -1,0 +1,8 @@
+{
+  "mode": "train",
+  "iterations": 2,
+  "trials": 8000000,
+  "info_set": "oo",
+  "model": "ann",
+  "model_path": "ann/model.pth"
+}

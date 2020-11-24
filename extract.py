@@ -1,10 +1,13 @@
 import argparse
 
+import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.linear_model import LinearRegression
+from sklearn import tree
+from sklearn.tree import DecisionTreeRegressor
 
+from agent.info_sets.info_set_std import InfoSetStd
 from figgie import Suit
-from util import load
+from prog import load
 
 
 def dict_add(d, key, value):
@@ -16,14 +19,17 @@ def dict_add(d, key, value):
 
 def main():
     parser = argparse.ArgumentParser(description='Extract info from strategy')
-    parser.add_argument('-s', '--strategy', type=str, default='strategies/strat_10000_simple_std.pickle', help='the regret agent strategy')
+    parser.add_argument('-s', '--strategy', type=str, default='strategies/strat_1000000_simple_std.pickle', help='the regret agent strategy')
     args = parser.parse_args()
 
-    game_tree, trials, model, info_set = load(args.strategy)
+    # TODO: dynamic
+    info_set = InfoSetStd('std')
+
+    game_tree, trials = load(args.strategy)
     print('strategy at: {}'.format(args.strategy))
     print('\tnum info sets: {}'.format(len(game_tree)))
     print('\ttrials trained: {}'.format(trials))
-    print('\tmodels: {}'.format(model.name))
+    # print('\tmodels: {}'.format(model.name))
     print('\tinfo set generator: {}'.format(info_set.name))
 
     count_asks = 0
@@ -100,47 +106,54 @@ def main():
 
     print('ask pricer: ')
     print('\tcount: {}'.format(count_asks))
-    regression = LinearRegression()
+    regression = DecisionTreeRegressor(max_depth=5)
     x = np.array(asking_x)
     y = np.array(asking_y, dtype=np.int32)
     regression.fit(x, y)
-    score = regression.score(x, y)
-    print('\tscore: {}'.format(score))
-    print('\tcoeff: {}'.format(regression.coef_))
-    print('\tintercept: {}'.format(regression.intercept_))
+    fig = plt.figure(figsize=(25, 20))
+    tree.plot_tree(regression)
+    # fig.show()
+    fig.savefig('asking_tree.png')
+    # score = regression.score(x, y)
+    # print('\tscore: {}'.format(score))
+    # print('\tcoeff: {}'.format(regression.coef_))
+    # print('\tintercept: {}'.format(regression.intercept_))
 
-    print('ask pricer in empty market: ')
-    print('\tcount: {}'.format(count_asks_empty))
-    regression = LinearRegression()
-    x = np.array(asking_x_empty).reshape(-1, 1)
-    y = np.array(asking_y_empty, dtype=np.int32)
-    regression.fit(x, y)
-    score = regression.score(x, y)
-    print('\tscore: {}'.format(score))
-    print('\tcoeff: {}'.format(regression.coef_))
-    print('\tintercept: {}'.format(regression.intercept_))
+    # print('ask pricer in empty market: ')
+    # print('\tcount: {}'.format(count_asks_empty))
+    # regression = DecisionTreeClassifier()
+    # x = np.array(asking_x_empty).reshape(-1, 1)
+    # y = np.array(asking_y_empty, dtype=np.int32)
+    # regression.fit(x, y)
+    # tree.plot_tree(regression)
+    # score = regression.score(x, y)
+    # print('\tscore: {}'.format(score))
+    # print('\tcoeff: {}'.format(regression.coef_))
+    # print('\tintercept: {}'.format(regression.intercept_))
 
-    print('bid pricer: ')
-    print('\tcount: {}'.format(count_bids))
-    regression = LinearRegression()
-    x = np.array(bidding_x)
-    y = np.array(bidding_y, dtype=np.int32)
-    regression.fit(x, y)
-    score = regression.score(x, y)
-    print('\tscore: {}'.format(score))
-    print('\tcoeff: {}'.format(regression.coef_))
-    print('\tintercept: {}'.format(regression.intercept_))
+    # print('bid pricer: ')
+    # print('\tcount: {}'.format(count_bids))
+    # regression = LinearRegression()
+    # x = np.array(bidding_x)
+    # y = np.array(bidding_y, dtype=np.int32)
+    # regression.fit(x, y)
+    # tree.plot_tree(regression)
+    # score = regression.score(x, y)
+    # print('\tscore: {}'.format(score))
+    # print('\tcoeff: {}'.format(regression.coef_))
+    # print('\tintercept: {}'.format(regression.intercept_))
 
-    print('bid pricer in empty market: ')
-    print('\tcount: {}'.format(count_bids_empty))
-    regression = LinearRegression()
-    x = np.array(bidding_x_empty).reshape(-1, 1)
-    y = np.array(bidding_y_empty, dtype=np.int32)
-    regression.fit(x, y)
-    score = regression.score(x, y)
-    print('\tscore: {}'.format(score))
-    print('\tcoeff: {}'.format(regression.coef_))
-    print('\tintercept: {}'.format(regression.intercept_))
+    # print('bid pricer in empty market: ')
+    # print('\tcount: {}'.format(count_bids_empty))
+    # regression = LinearRegression()
+    # x = np.array(bidding_x_empty).reshape(-1, 1)
+    # y = np.array(bidding_y_empty, dtype=np.int32)
+    # regression.fit(x, y)
+    # tree.plot_tree(regression)
+    # score = regression.score(x, y)
+    # print('\tscore: {}'.format(score))
+    # print('\tcoeff: {}'.format(regression.coef_))
+    # print('\tintercept: {}'.format(regression.intercept_))
 
 
 if __name__ == '__main__':
