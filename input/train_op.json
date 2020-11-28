@@ -1,6 +1,7 @@
 {
   "mode": "train",
-  "iterations": 2,
+  "start": "strategies/strat_8000000_ann_op.pickle",
+  "iterations": 1,
   "trials": 8000000,
   "info_set": "op",
   "model": "ann",
