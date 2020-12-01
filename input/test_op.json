@@ -1,0 +1,35 @@
+{
+  "mode": "test",
+  "trials": 100000,
+  "verbose": "False",
+  "agents": [
+    {
+      "type": "regret",
+      "model": "ann",
+      "model_path": "ann/model.pth",
+      "info_set": "std",
+      "strategy": "strategies/strat_1000000_ann_std.pickle"
+    },
+    {
+      "type": "regret",
+      "model": "ann",
+      "model_path": "ann/model.pth",
+      "info_set": "std",
+      "strategy": "strategies/strat_1000000_ann_std.pickle"
+    },
+    {
+      "type": "regret",
+      "model": "ann",
+      "model_path": "ann/model.pth",
+      "info_set": "std",
+      "strategy": "strategies/strat_1000000_ann_std.pickle"
+    },
+    {
+      "type": "regret",
+      "model": "ann",
+      "model_path": "ann/model.pth",
+      "info_set": "op",
+      "strategy": "strategies/strat_16000000_ann_op.pickle"
+    }
+  ]
+}

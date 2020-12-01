@@ -1,9 +1,7 @@
 import argparse
 
-import matplotlib.pyplot as plt
 import numpy as np
-from sklearn import tree
-from sklearn.tree import DecisionTreeRegressor
+from sklearn.linear_model import LinearRegression
 
 from agent.info_sets.info_set_std import InfoSetStd
 from figgie import Suit
@@ -39,12 +37,12 @@ def main():
 
     asking_x = []
     asking_y = []
-    asking_x_empty = []
-    asking_y_empty = []
-    bidding_x = []
-    bidding_y = []
-    bidding_x_empty = []
-    bidding_y_empty = []
+    # asking_x_empty = []
+    # asking_y_empty = []
+    # bidding_x = []
+    # bidding_y = []
+    # bidding_x_empty = []
+    # bidding_y_empty = []
 
 
     for key in game_tree.keys():
@@ -62,20 +60,20 @@ def main():
                 asking_y.append(best_price)
             else:
                 count_asks_empty += 1
-                asking_x_empty.append(card_util)
-                asking_y_empty.append(best_price)
+                # asking_x_empty.append(card_util)
+                # asking_y_empty.append(best_price)
         elif tokens[0] == 'bid':
             buying_price = int(tokens[2]) if tokens[2] != 'N' else None
             actions = info_set.generate_bid_actions(card_util, buying_price, Suit.CLUBS)
             best_price = actions[strategy.argmax()]
             if buying_price is not None:
                 count_bids += 1
-                bidding_x.append([buying_price, card_util])
-                bidding_y.append(best_price)
+                # bidding_x.append([buying_price, card_util])
+                # bidding_y.append(best_price)
             else:
                 count_bids_empty += 1
-                bidding_x_empty.append(card_util)
-                bidding_y_empty.append(best_price)
+                # bidding_x_empty.append(card_util)
+                # bidding_y_empty.append(best_price)
         elif tokens[0] == 'at':
             buying_price = int(tokens[2]) if tokens[2] != 'N' else None
             selling_price = int(tokens[3]) if tokens[3] != 'N' else None
@@ -83,12 +81,12 @@ def main():
             best_price = actions[strategy.argmax()]
             if buying_price is not None:
                 count_bids += 1
-                bidding_x.append([buying_price, card_util])
-                bidding_y.append(best_price[0])
+                # bidding_x.append([buying_price, card_util])
+                # bidding_y.append(best_price[0])
             else:
                 count_bids_empty += 1
-                bidding_x_empty.append(card_util)
-                bidding_y_empty.append(best_price[0])
+                # bidding_x_empty.append(card_util)
+                # bidding_y_empty.append(best_price[0])
 
             if selling_price is not None:
                 count_asks += 1
@@ -96,8 +94,8 @@ def main():
                 asking_y.append(best_price[1])
             else:
                 count_asks_empty += 1
-                asking_x_empty.append(card_util)
-                asking_y_empty.append(best_price[1])
+                # asking_x_empty.append(card_util)
+                # asking_y_empty.append(best_price[1])
 
         else:
             raise ValueError('Invalid operation: {}'.format(key))
@@ -106,18 +104,20 @@ def main():
 
     print('ask pricer: ')
     print('\tcount: {}'.format(count_asks))
-    regression = DecisionTreeRegressor(max_depth=3)
-    x = np.array(asking_x)
-    y = np.array(asking_y, dtype=np.int32)
-    regression.fit(x, y)
-    fig = plt.figure(figsize=(100, 100))
-    tree.plot_tree(regression)
-    # fig.show()
-    fig.savefig('asking_tree.png')
-    # score = regression.score(x, y)
-    # print('\tscore: {}'.format(score))
-    # print('\tcoeff: {}'.format(regression.coef_))
-    # print('\tintercept: {}'.format(regression.intercept_))
+    # regression = DecisionTreeRegressor(max_depth=4)
+    regression = LinearRegression()
+    asking_x = np.array(asking_x, dtype=(np.float32, np.float32))
+    asking_y = np.array(asking_y, dtype=np.float)
+    regression.fit(asking_x, asking_y)
+
+    # fig = plt.figure(figsize=(100, 100))
+    # tree.plot_tree(regression, feature_names=['market price', 'model util'], filled=True)
+    # fig.savefig('asking_tree.png')
+
+    score = regression.score(asking_x, asking_y)
+    print('\tscore: {}'.format(score))
+    print('\tcoeff: {}'.format(regression.coef_))
+    print('\tintercept: {}'.format(regression.intercept_))
 
     # print('ask pricer in empty market: ')
     # print('\tcount: {}'.format(count_asks_empty))
