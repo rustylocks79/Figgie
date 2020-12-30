@@ -1,8 +1,7 @@
 {
   "mode": "train",
-  "start": "strategies/strat_8000000_ann_oo.pickle",
   "iterations": 1,
-  "trials": 8000000,
+  "trials": 10000000,
   "info_set": "oo",
   "model": "ann",
   "model_path": "ann/model.pth"

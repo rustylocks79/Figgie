@@ -2,7 +2,7 @@
   "mode": "train",
   "iterations": 1,
   "trials": 10000000,
-  "info_set": "o",
+  "info_set": "ol",
   "model": "ann",
   "model_path": "ann/model.pth"
 }

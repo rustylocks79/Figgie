@@ -1,6 +1,8 @@
 import argparse
 import json
+import os
 import pickle
+import re
 import time
 from statistics import median
 
@@ -8,8 +10,11 @@ from agent.choosers.simple_chooser import SimpleChooser
 from agent.info_sets.info_set_h import InfoSetH
 from agent.info_sets.info_set_l import InfoSetL
 from agent.info_sets.info_set_o import InfoSetO
+from agent.info_sets.info_set_oh import InfoSetOH
+from agent.info_sets.info_set_ol import InfoSetOL
 from agent.info_sets.info_set_oo import InfoSetOO
 from agent.info_sets.info_set_op import InfoSetOP
+from agent.info_sets.info_set_ot import InfoSetOT
 from agent.info_sets.info_set_std import InfoSetStd
 from agent.info_sets.info_set_t import InfoSetT
 from agent.models.ann_model import AnnModel
@@ -19,6 +24,7 @@ from agent.modular_agent import ModularAgent
 from agent.pricers.faded_pricer import FadedPricer
 from agent.pricers.half_pricer import HalfPricer
 from agent.pricers.random_pricer import RandomPricer
+from agent.pricers.three_quarters_pricer import ThreeQuartersPricer
 from agent.regret_agent import RegretAgent, InfoSetGenerator
 from figgie import Figgie
 
@@ -43,9 +49,13 @@ info_sets = {'std': InfoSetStd('std'),
              'l': InfoSetL(),
              'o': InfoSetO(),
              'op': InfoSetOP(),
+             'oh': InfoSetOH(),
+             'ot': InfoSetOT(),
+             'ol': InfoSetOL(),
              'oo': InfoSetOO()}
 
 pricers = {'half': HalfPricer(),
+           '3/4': ThreeQuartersPricer(),
            'random': RandomPricer(),
            "faded": FadedPricer()}
 
@@ -100,9 +110,9 @@ def train(iterations: int, trials: int, prev_trials: int, info_set: InfoSetGener
         variance = sum([((x - mean) ** 2) for x in observations]) / len(observations)
         dev = variance ** 0.5
 
-        print('\t\tavg operations: {}'.format(mean))
-        print('\t\tmedian operations: {}'.format(median(observations)))
-        print('\t\tstd dev. operations: {}'.format(dev))
+        print('\t\tavg observations: {}'.format(mean))
+        print('\t\tmedian observations: {}'.format(median(observations)))
+        print('\t\tstd dev. observations: {}'.format(dev))
 
         start_time = time.process_time()
         file_name = save(agent.game_tree, prev_trials + trials * i, agent.util_model.name, info_set.name)
@@ -145,11 +155,19 @@ def main():
         trials = parameters['trials']
         info_set = info_sets[parameters['info_set']]
         model = get_model(parameters)
-        if 'start' in parameters:
-            start, prev_trials = load(parameters['start'])
-        else:
-            start = {}
-            prev_trials = 0
+        start = {}
+        prev_trials = 0
+        result = None
+        result_trials = 0
+        for file in os.listdir("strategies/"):
+            if file.endswith(".pickle"):
+                tokens = re.split('[_.]', file)
+                if tokens[3] == info_set.name and tokens[2] == model.name and int(tokens[1]) > result_trials:
+                    result = file
+                    result_trials = int(tokens[1])
+
+        if result is not None:
+            start, prev_trials = load("strategies/" + result)
             
         print('Parameters')
         print('\titerations: {}'.format(iterations))
