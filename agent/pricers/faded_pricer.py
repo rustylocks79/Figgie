@@ -11,6 +11,8 @@ class FadedPricer(Pricer):
         market = figgie.markets[suit.value]
         minimum = market.buying_price + 1 if market.has_buyer() else 1
         maximum = min(round(utils[suit.value]), figgie.chips[figgie.active_player])
+        if market.last_price is not None and minimum < market.last_price < maximum:
+            maximum = market.last_price
         assert minimum <= maximum
         return (maximum - minimum) // 2 + minimum
 
@@ -18,6 +20,8 @@ class FadedPricer(Pricer):
         market = figgie.markets[suit.value]
         minimum = max(1, round(utils[suit.value]))
         maximum = market.selling_price - 1 if market.has_seller() else round(utils[suit.value] * 2)
+        if market.last_price is not None and minimum < market.last_price < maximum:
+            minimum = market.last_price
         assert minimum <= maximum
         return maximum - (maximum - minimum) // 2
 
@@ -27,6 +31,11 @@ class FadedPricer(Pricer):
         high_bid = min(round(utils[suit.value]), figgie.chips[figgie.active_player])
         low_ask = round(utils[suit.value])
         maximum = market.selling_price - 1 if market.has_seller() else round(utils[suit.value] * 2)
+        if market.last_price is not None:
+            if minimum < market.last_price < high_bid:
+                high_bid = market.last_price
+            elif low_ask < market.last_price < maximum:
+                low_ask = market.last_price
         assert minimum <= high_bid <= low_ask <= maximum
         bidding_price = (high_bid - minimum) // 2 + minimum
         asking_price = maximum - (maximum - low_ask) // 2
