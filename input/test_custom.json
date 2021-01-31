@@ -7,7 +7,7 @@
       "type": "modular",
       "model": "ann",
       "model_path": "ann/model.pth",
-      "pricer": "half"
+      "pricer": "custom"
     },
     {
       "type": "modular",
@@ -19,7 +19,7 @@
       "type": "modular",
       "model": "ann",
       "model_path": "ann/model.pth",
-      "pricer": "faded"
+      "pricer": "custom"
     },
     {
       "type": "regret",

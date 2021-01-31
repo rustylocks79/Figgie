@@ -21,10 +21,11 @@ from agent.models.ann_model import AnnModel
 from agent.models.simple_model import SimpleModel
 from agent.models.utility_model import UtilityModel
 from agent.modular_agent import ModularAgent
+from agent.pricers.custom_faded_pricer import CustomFadedPricer
+from agent.pricers.custom_pricer import CustomPricer
 from agent.pricers.faded_pricer import FadedPricer
 from agent.pricers.half_pricer import HalfPricer
 from agent.pricers.random_pricer import RandomPricer
-from agent.pricers.three_quarters_pricer import ThreeQuartersPricer
 from agent.regret_agent import RegretAgent, InfoSetGenerator
 from figgie import Figgie
 
@@ -55,9 +56,10 @@ info_sets = {'std': InfoSetStd('std'),
              'oo': InfoSetOO()}
 
 pricers = {'half': HalfPricer(),
-           '3/4': ThreeQuartersPricer(),
            'random': RandomPricer(),
-           "faded": FadedPricer()}
+           "faded": FadedPricer(),
+           "custom": CustomPricer(),
+           "custom_faded": CustomFadedPricer()}
 
 
 def get_model(parameters: dict) -> UtilityModel:
